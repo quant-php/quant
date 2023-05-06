@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<ruleset name="quant-php/php coding standards">
+    <description>The coding standard (PSR-12) for quant-php/quant</description>
+
+    <file>src/</file>
+    <file>tests/</file>
+
+    <rule ref="PSR12" />
+
+    <rule ref="Generic.PHP.RequireStrictTypes" />
+   
+</ruleset>
