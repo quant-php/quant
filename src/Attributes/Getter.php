@@ -24,6 +24,8 @@
  * SOFTWARE.
  */
 
+declare(strict_types=1);
+
 namespace Quant\Attributes;
 
 use Attribute;
