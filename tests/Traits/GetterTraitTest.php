@@ -44,10 +44,7 @@ class GetterTraitTest extends TestCase
 
         $class = $this->createClassWithTrait($args_1);
         $anotherClass = $this->createClassWithTrait($args_2);
-
-        /**
-         * @method string getFoo()
-         */
+        
         $this->assertSame($args_1["foo"], $class->getFoo());
         $this->assertSame("Ok", $class->getFoobar());
         $this->assertSame($args_2["foo"], $anotherClass->getFoo());
