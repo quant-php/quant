@@ -112,18 +112,20 @@ trait PropertyAccessorTrait
      */
     public function __call($method, $args): mixed
     {
-        $isSetter = str_starts_with($method, "set");
-        $isGetter = str_starts_with($method, "get");
-        $property = lcfirst(substr($method, 3));
+        if (($isSetter = str_starts_with($method, "set")) ||
+            str_starts_with($method, "get")) {
 
-        if ($isSetter) {
-            if ($this->hasSetterAttribute($property)) {
-                $this->applyFromSetter($property, $args[0]);
-                return $this;
-            }
-        } elseif ($isGetter) {
-            if ($this->hasGetterAttribute($property)) {
-                return $this->$property;
+            $property = lcfirst(substr($method, 3));
+
+            if ($isSetter) {
+                if ($this->hasSetterAttribute($property)) {
+                    $this->applyFromSetter($property, $args[0]);
+                    return $this;
+                }
+            } else  {
+                if ($this->hasGetterAttribute($property)) {
+                    return $this->$property;
+                }
             }
         }
 
