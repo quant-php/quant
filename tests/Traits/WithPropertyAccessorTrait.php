@@ -28,24 +28,37 @@ declare(strict_types=1);
 
 namespace Tests\Quant\Traits;
 
+use Quant\Attributes\Setter;
 use Quant\Attributes\Getter;
-use Quant\Traits\GetterTrait;
+use Quant\Traits\PropertyAccessorTrait;
 
 /**
-* @method string getFoo()
-* @method string getFoobar()
-*/
-class WithGetterTrait
+ * @method string setFoo(string $a)
+ * @method string setFoobar(string $b)
+ * @method string getFoo()
+ */
+class WithPropertyAccessorTrait
 {
-    use GetterTrait;
+    use PropertyAccessorTrait;
 
-    #[Getter]
-    private string $foobar = "Ok";
+    #[Setter]
+    public string $foobar = "Ok";
 
     private string $snafu;
     public function __construct(
-        #[Getter]
-        private string $foo
+        #[Setter] #[Getter]
+        public string $foo
     ) {
+        $this->configureProperties(func_get_args());
+    }
+
+
+    protected function applyFoo(mixed $value): mixed
+    {
+        if ($value !== "noset") {
+            return $value;
+        }
+
+        return $this->foo;
     }
 }

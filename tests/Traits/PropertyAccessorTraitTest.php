@@ -31,9 +31,9 @@ namespace Tests\Quant\Traits;
 use BadMethodCallException;
 use PHPUnit\Framework\TestCase;
 
-class SetterTraitTest extends TestCase
+class PropertyAccessorTraitTest extends TestCase
 {
-    public function testSetterTrait(): void
+    public function testPropertyAccessorTrait(): void
     {
         $args_1 = [
             "foo" => "Hello World"
@@ -42,8 +42,8 @@ class SetterTraitTest extends TestCase
             "foo" => "Hello World!"
         ];
 
-        $class = $this->createClassWithTrait($args_1);
-        $anotherClass = $this->createClassWithTrait($args_2);
+        $class = $this->createClassWithPropertyAccessorTrait($args_1);
+        $anotherClass = $this->createClassWithPropertyAccessorTrait($args_2);
 
         $this->assertSame($class, $class->setFoo("foo"));
 
@@ -53,25 +53,30 @@ class SetterTraitTest extends TestCase
         $this->assertSame($anotherClass, $anotherClass->setFoo("foo"));
         $this->assertSame("foo", $anotherClass->foo);
         $this->assertSame("foo", $class->foo);
+        $this->assertSame("foo", $class->getFoo());
+
+        // guarded
+        $this->assertSame($anotherClass, $anotherClass->setFoo("noset"));
+        $this->assertSame("foo", $anotherClass->foo);
     }
 
 
-    public function testBadMethodCallExceptionOnNotExisting(): void
+    public function testBadMethodCallExceptionOnSetNotExisting(): void
     {
         $this->expectException(BadMethodCallException::class);
 
-        $class = $this->createClassWithTrait(["foo" => "Hello World"]);
+        $class = $this->createClassWithPropertyAccessorTrait(["foo" => "Hello World"]);
 
         /* @phpstan-ignore-next-line*/
         $class->setBar("missing");
     }
 
 
-    public function testBadMethodCallExceptionOnNotAttributed(): void
+    public function testBadMethodCallExceptionOnSetNotAttributed(): void
     {
         $this->expectException(BadMethodCallException::class);
 
-        $class = $this->createClassWithTrait(["foo" => "Hello World"]);
+        $class = $this->createClassWithPropertyAccessorTrait(["foo" => "Hello World"]);
 
         /* @phpstan-ignore-next-line*/
         $class->setSnafu(true);
@@ -81,21 +86,55 @@ class SetterTraitTest extends TestCase
     public function testBadMethodCallExceptionOnNotSetPrefixed(): void
     {
         $this->expectException(BadMethodCallException::class);
-        $this->expectExceptionMessage("not considered");
+        $this->expectExceptionMessage("not found");
 
-        $class = $this->createClassWithTrait(["foo" => "Hello World"]);
+        $class = $this->createClassWithPropertyAccessorTrait(["foo" => "Hello World"]);
 
         /* @phpstan-ignore-next-line*/
         $class->snafu();
     }
 
+    public function testBadMethodCallExceptionOnGetNotExisting(): void
+    {
+        $this->expectException(BadMethodCallException::class);
+
+        $class = $this->createClassWithPropertyAccessorTrait(["foo" => "Hello World"]);
+
+        /* @phpstan-ignore-next-line*/
+        $class->getBar();
+    }
+
+
+    public function testBadMethodCallExceptionOnGetNotAttributed(): void
+    {
+        $this->expectException(BadMethodCallException::class);
+
+        $class = $this->createClassWithPropertyAccessorTrait(["foo" => "Hello World"]);
+
+        /* @phpstan-ignore-next-line*/
+        $class->getSnafu();
+    }
+
+
+    public function testBadMethodCallExceptionOnNotGetPrefixed(): void
+    {
+        $this->expectException(BadMethodCallException::class);
+        $this->expectExceptionMessage("not found");
+
+        $class = $this->createClassWithPropertyAccessorTrait(["foo" => "Hello World"]);
+
+        /* @phpstan-ignore-next-line*/
+        $class->snafu();
+    }
+
+
     /**
      * @param array<string, string> $data
      *
-     * @return WithSetterTrait
+     * @return WithPropertyAccessorTrait
      */
-    protected function createClassWithTrait(array $data): object
+    protected function createClassWithPropertyAccessorTrait(array $data): object
     {
-        return new WithSetterTrait(...$data);
+        return new WithPropertyAccessorTrait(...$data);
     }
 }
