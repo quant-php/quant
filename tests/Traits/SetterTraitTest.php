@@ -53,6 +53,10 @@ class SetterTraitTest extends TestCase
         $this->assertSame($anotherClass, $anotherClass->setFoo("foo"));
         $this->assertSame("foo", $anotherClass->foo);
         $this->assertSame("foo", $class->foo);
+
+        // guarded
+        $this->assertSame($anotherClass, $anotherClass->setFoo("noset"));
+        $this->assertSame("foo", $anotherClass->foo);
     }
 
 
@@ -81,7 +85,7 @@ class SetterTraitTest extends TestCase
     public function testBadMethodCallExceptionOnNotSetPrefixed(): void
     {
         $this->expectException(BadMethodCallException::class);
-        $this->expectExceptionMessage("not considered");
+        $this->expectExceptionMessage("not found");
 
         $class = $this->createClassWithTrait(["foo" => "Hello World"]);
 

@@ -47,5 +47,16 @@ class WithSetterTrait
         #[Setter]
         public string $foo
     ) {
+        $this->configureProperties(func_get_args());
+    }
+
+
+    protected function applyFoo(mixed $value): mixed
+    {
+        if ($value !== "noset") {
+            return $value;
+        }
+
+        return $this->foo;
     }
 }

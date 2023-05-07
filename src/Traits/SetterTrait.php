@@ -31,11 +31,20 @@ namespace Quant\Traits;
 use BadMethodCallException;
 use Quant\Attributes\Setter;
 use ReflectionClass;
+use ReflectionParameter;
 
 /**
- * Provides write-access to object members attributed with #[Setter].
+ * Provides write-access to object properties attributed with `#[Setter]`.
+ * For each property (or constructor parameter, e.g. using constructor property promotion) that has such an attribute,
+ * a `set[Property_Name]`-method will be available that can be called to set the property.
+ * Such `setter`-methods can be guarded with an `apply[Property_Name]`-method: Implementing clients can provide
+ * further specifications regarding the domain the property belongs to. The `apply`-method is called by the
+ * `set`-method: if such an `apply`-method exists, its return-value will be used as the value for the property whose
+ * setter was called.
  *
  * @example
+ *
+ * ```php
  *    use Setter;
  *    use SetterTrait;
  *
@@ -45,70 +54,169 @@ use ReflectionClass;
  *         #[Setter]
  *         public bool $state = true;
  *
- *         public function __construct(#[Setter]public string $value)
+ *         public function __construct(#[Setter]public string $value, bool $state)
  *         {
+ *              $this->configureProperties(func_get_args());
  *         }
+ *
+ *         protected function applyState($value): mixed
+ *         {
+ *             return true;
+ *         }
+ *
+ *         protected function applyValue($value): mixed
+ *         {
+ *             return stopper($value);
+ *         }
+ *
  *     }
  *
- *    $target = new Target("Hello World");
+ *    $target = new Target("Hello World", false);
  *
  *    $target->setValue("Hello World");
  *    echo $target->value; // "Hello World"
  *    $target->setState(false);
-*     echo $target->state; // false
- *
+ *    // the applyState() will take care of always returning true, so $state is never set to false.
+*     echo $target->state; // true
+ * ```
  */
 trait SetterTrait
 {
     /**
      * @var array<string, bool>
      */
-    private array $setterCache = [];
+    private ?array $setterCache = null;
 
 
     /**
      * @param string $method
      * @param array<int, mixed> $args
-     * @return mixed
+     *
+     * @return static
      *
      * @throws BadMethodCallException
      */
-    public function __call($method, $args): mixed
+    public function __call($method, $args): static
     {
-        if (!str_starts_with($method, "set")) {
-            throw new BadMethodCallException("$method not considered by SetterTrait::__call.");
-        }
-
-        $requestedProp = lcfirst(substr($method, 3));
-
-        if (isset($this->setterCache[$requestedProp])) {
-            $this->$requestedProp = $args[0];
-            return $this;
-        }
-
-        $reflectionClass = new ReflectionClass($this);
-
-        $constructor = $reflectionClass->getConstructor();
-        if ($constructor) {
-            $parameters = $constructor->getParameters();
-        }
-
-        $parameters = array_merge($parameters ?? [], $reflectionClass->getProperties());
-
-        foreach ($parameters as $parameter) {
-            if ($parameter->getName() !== $requestedProp) {
-                continue;
-            }
-
-            $attributes = $parameter->getAttributes();
-
-            if ($attributes && $attributes[0]->getName() === Setter::class) {
-                $this->setterCache[$requestedProp] = true;
-                $this->$requestedProp = $args[0];
+        if (str_starts_with($method, "set")) {
+            $property = lcfirst(substr($method, 3));
+            if ($this->hasSetterAttribute($property)) {
+                $this->applyFromSetter($property, $args[0]);
                 return $this;
             }
         }
 
         throw new BadMethodCallException("$method not found.");
+    }
+
+    private function applyFromSetter(string $property, mixed $value): void
+    {
+        $applier = "apply" . ucfirst($property);
+
+        $newValue = $value;
+        if (method_exists($this, $applier)) {
+            $newValue = $this->{$applier}($value);
+        }
+        $this->$property = $newValue;
+    }
+
+
+    /**
+     * Configures the  properties of this class with the values available in $args.
+     * The ordinal value of the individual entries in $args is expected to match the ordinal value of the parameter
+     * that is to be configured with the value, e.g. to apply a value to parameter $b of the following constructor
+     *
+     * `__construct($a, $b)`
+     *
+     * an array in the form of
+     *
+     * `$args = [1 => "value_of_b"]`
+     *
+     * Must be passed to this method.
+     * This can be automated by calling this method from the constructor with the value of `func_get_args()`:
+     *
+     * ```php
+     *    public function __construct(
+     *        private string $a,
+     *        #[Setter]
+     *        private string $b
+     *    ) {
+     *        $this->configureProperties(func_get_args());
+     *    }
+     * ```
+     *
+     * Note that only those properties will be set that have an Attribute-Annotation `#[Setter]` configured. For
+     * these properties, the appropriate `set[Property_Name]()`-method will be called.
+     *
+     * @param array<int, mixed> $args
+     * @return void
+     */
+    private function configureProperties(array $args): void
+    {
+        $parameters = $this->getConstructorParameters();
+
+        foreach ($parameters as $index => $parameter) {
+            $propertyName = $parameter->getName();
+
+            if (isset($args[$index]) && $this->hasSetterAttribute($propertyName)) {
+                $this->__call("set" . ucfirst($parameter->getName()), [$args[$index]]);
+            }
+        }
+    }
+
+
+    private function hasSetterAttribute(string $propertyName): bool
+    {
+        if (!$this->setterCache) {
+            $this->setterCache = $this->cachePropertiesWithSetterAttribute();
+        }
+
+        return isset($this->setterCache[$propertyName]) && $this->setterCache[$propertyName] === true;
+    }
+
+
+    /**
+     * @return array<string, bool>
+     */
+    private function cachePropertiesWithSetterAttribute(): array
+    {
+        $setters = [];
+
+        $reflectionClass = new ReflectionClass($this);
+        $parameters = array_merge(
+            $this->getConstructorParameters($reflectionClass),
+            $reflectionClass->getProperties()
+        );
+
+        foreach ($parameters as $parameter) {
+            $propertyName = $parameter->getName();
+            $attributes = $parameter->getAttributes();
+
+            if ($attributes && $attributes[0]->getName() === Setter::class) {
+                $setters[$propertyName] = true;
+            }
+        }
+
+        return $setters;
+    }
+
+
+    /**
+     * @param ReflectionClass<object>|null $reflectionClass
+     * @return array<int, ReflectionParameter>
+     */
+    private function getConstructorParameters(?ReflectionClass $reflectionClass = null): array
+    {
+        if (!$reflectionClass) {
+            $reflectionClass = new ReflectionClass($this);
+        }
+
+        $constructor = $reflectionClass->getConstructor();
+        $parameters = [];
+        if ($constructor) {
+            $parameters = $constructor->getParameters();
+        }
+
+        return $parameters;
     }
 }
