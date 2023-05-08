@@ -33,6 +33,7 @@ use Quant\Attributes\Getter;
 use Quant\Attributes\Setter;
 use ReflectionClass;
 use ReflectionParameter;
+use TypeError;
 use ValueError;
 
 /**
@@ -83,7 +84,13 @@ use ValueError;
  *    $target->setValue("Hello World");
  *    echo $target->value; // "HELLO WORLD"
  *    echo $target->getValue(); // "HELLO WORLD"
- *    $target->setState(false);
+ *    try {
+ *       $target->setState(false);
+ *    } catch (ValueError $err) {
+ *      echo "Cannot set the value for state: ". $err->getMessage();
+ *      die();
+ *   }
+ *
  *    // the applyState() will take care of always returning true, so $state is never set to false.
  *     echo $target->state; // true
  * ```
@@ -112,24 +119,35 @@ trait PropertyAccessorTrait
      */
     public function __call($method, $args): mixed
     {
-        $isSetter = str_starts_with($method, "set");
-        $isGetter = str_starts_with($method, "get");
-        $property = lcfirst(substr($method, 3));
+        if (
+            ($isSetter = str_starts_with($method, "set")) ||
+            str_starts_with($method, "get")
+        ) {
+            $property = lcfirst(substr($method, 3));
 
-        if ($isSetter) {
-            if ($this->hasSetterAttribute($property)) {
-                $this->applyFromSetter($property, $args[0]);
-                return $this;
-            }
-        } elseif ($isGetter) {
-            if ($this->hasGetterAttribute($property)) {
-                return $this->$property;
+            if ($isSetter) {
+                if ($this->hasSetterAttribute($property)) {
+                    $this->applyFromSetter($property, $args[0]);
+                    return $this;
+                }
+            } else {
+                if ($this->hasGetterAttribute($property)) {
+                    return $this->$property;
+                }
             }
         }
 
         throw new BadMethodCallException("$method not found.");
     }
 
+    /**
+     * @param string $property
+     * @param mixed $value
+     * @return void
+     *
+     * @throws ValueError
+     * @throws TypeError
+     */
     private function applyFromSetter(string $property, mixed $value): void
     {
         $applier = "apply" . ucfirst($property);

@@ -30,6 +30,7 @@ namespace Tests\Quant\Traits;
 
 use BadMethodCallException;
 use PHPUnit\Framework\TestCase;
+use ValueError;
 
 class PropertyAccessorTraitTest extends TestCase
 {
@@ -58,6 +59,21 @@ class PropertyAccessorTraitTest extends TestCase
         // guarded
         $this->assertSame($anotherClass, $anotherClass->setFoo("noset"));
         $this->assertSame("foo", $anotherClass->foo);
+    }
+
+
+    public function testPropertyAccessorTraitWithDifferentValues(): void
+    {
+        $this->expectException(ValueError::class);
+        $this->expectExceptionMessage(">= 2");
+
+        $args_1 = [
+            "foo" => "Hello World"
+        ];
+
+        $class = $this->createClassWithPropertyAccessorTrait($args_1);
+
+        $this->assertSame($class, $class->setValueErrorTrigger(1));
     }
 
 

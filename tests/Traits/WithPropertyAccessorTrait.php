@@ -31,15 +31,20 @@ namespace Tests\Quant\Traits;
 use Quant\Attributes\Setter;
 use Quant\Attributes\Getter;
 use Quant\Traits\PropertyAccessorTrait;
+use ValueError;
 
 /**
  * @method string setFoo(string $a)
  * @method string setFoobar(string $b)
  * @method string getFoo()
+ * @method int setValueErrorTrigger(int $a).
  */
 class WithPropertyAccessorTrait
 {
     use PropertyAccessorTrait;
+
+    #[Setter]
+    private int $valueErrorTrigger;
 
     #[Setter]
     public string $foobar = "Ok";
@@ -60,5 +65,14 @@ class WithPropertyAccessorTrait
         }
 
         return $this->foo;
+    }
+
+
+    protected function applyValueErrorTrigger(int $value): int
+    {
+        if ($value < 2) {
+            throw new ValueError("invalid value for valueErrorTrigger: must be >= 2");
+        }
+        return $value;
     }
 }
