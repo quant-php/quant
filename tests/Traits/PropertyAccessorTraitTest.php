@@ -62,6 +62,22 @@ class PropertyAccessorTraitTest extends TestCase
     }
 
 
+    public function testSettersAndGettersForClass(): void
+    {
+        $class = $this->createClassWithSetterAndGetterAttributes([
+            "foo" => "Hello World",
+            "bar" => "World Hello"
+        ]);
+
+        $class->setFoo("foo")->setBar("bar")->setSnafu("snafu")->setFoobar("foobar");
+
+        $this->assertSame("foo", $class->getFoo());
+        $this->assertSame("bar", $class->getBar());
+        $this->assertSame("snafu", $class->getSnafu());
+        $this->assertSame("foobar", $class->getFoobar());
+    }
+
+
     public function testPropertyAccessorTraitWithDifferentValues(): void
     {
         $this->expectException(ValueError::class);
@@ -152,5 +168,15 @@ class PropertyAccessorTraitTest extends TestCase
     protected function createClassWithPropertyAccessorTrait(array $data): object
     {
         return new WithPropertyAccessorTrait(...$data);
+    }
+
+    /**
+     * @param array<string, string> $data
+     *
+     * @return ClassHasAttributes
+     */
+    protected function createClassWithSetterAndGetterAttributes(array $data): object
+    {
+        return new ClassHasAttributes(...$data);
     }
 }

@@ -43,7 +43,11 @@ use ValueError;
  * Such `setter`-methods can be guarded with an `apply[Property_Name]`-method: Implementing clients can provide
  * further specifications regarding the domain the property belongs to. The `apply`-method is called by the
  * `set`-method: if such an `apply`-method exists, its return-value will be used as the value for the property whose
- * setter was called.
+ * setter was called. The return of the setter will be *this* instance.
+ * Getters in turn can be installed using the #[Getter] attribute.
+ *
+ * If the class itself is attributed with #[Getter] or #[Setter], for all properties of the class individual getters
+ * and setters will be made available.
  *
  * @example
  *
@@ -235,6 +239,9 @@ trait PropertyAccessorTrait
         $propBag = [];
 
         $reflectionClass = new ReflectionClass($this);
+
+        $hasClassAccessorAttribute = $reflectionClass->getAttributes($accessorClass);
+
         $parameters = array_merge(
             $this->getConstructorParameters($reflectionClass),
             $reflectionClass->getProperties()
@@ -242,14 +249,9 @@ trait PropertyAccessorTrait
 
         foreach ($parameters as $parameter) {
             $propertyName = $parameter->getName();
-            $attributes = $parameter->getAttributes();
+            $hasAccessor = $hasClassAccessorAttribute || $parameter->getAttributes($accessorClass);
 
-            if (
-                $attributes &&
-                count(
-                    array_filter($attributes, fn ($attribute) => $attribute->getName() === $accessorClass)
-                ) > 0
-            ) {
+            if ($hasAccessor) {
                 $propBag[$propertyName] = true;
             }
         }
