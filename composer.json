@@ -1,5 +1,5 @@
 {
-    "name": "quant-php/quant",
+    "name": "quant/quant",
     "type": "library",
     "description": "PHP library",
     "keywords": ["framework"],
