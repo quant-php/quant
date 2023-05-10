@@ -26,13 +26,15 @@
 
 declare(strict_types=1);
 
-namespace Quant\Traits;
+namespace Quant\Core\Trait;
 
 use BadMethodCallException;
-use Quant\Attributes\Getter;
-use Quant\Attributes\Setter;
+use Quant\Core\Lang\Modifier;
+use Quant\Core\Attribute\Getter;
+use Quant\Core\Attribute\Setter;
 use ReflectionClass;
 use ReflectionParameter;
+use ReflectionProperty;
 use TypeError;
 use ValueError;
 
@@ -53,13 +55,18 @@ use ValueError;
  *
  * ```php
  *    use Setter;
- *    use PropertyAccessorTrait;
+ *    use AccessorGenerator;
+ *    use const Quant\Core\Constants\ACCESS_LEVEL_PROTECTED as ACCESS_PROTECTED;
+ *    use const Quant\Core\Constants\ACCESS_LEVEL_PUBLIC as ACCESS_PUBLIC;
  *
  *    class Target {
- *         trait PropertyAccessorTrait;
+ *         trait AccessorGenerator;
  *
  *         #[Setter]
  *         public bool $state = true;
+ *
+ *         #[Getter(accessLevel: PROTECTED_ACCESS)]
+ *         private string $protectedProperty = "access protected";
  *
  *         public function __construct(
  *              #[Setter]#[Getter]
@@ -99,15 +106,18 @@ use ValueError;
  *     echo $target->state; // true
  * ```
  */
-trait PropertyAccessorTrait
+trait AccessorGenerator
 {
+    private const GET = "get";
+    private const SET = "set";
+
     /**
-     * @var array<string, bool>
+     * @var array<string, array>
      */
     private ?array $setterCache = null;
 
     /**
-     * @var array<string, bool>
+     * @var array<string, array>
      */
     private ?array $getterCache = null;
 
@@ -124,18 +134,18 @@ trait PropertyAccessorTrait
     public function __call($method, $args): mixed
     {
         if (
-            ($isSetter = str_starts_with($method, "set")) ||
-            str_starts_with($method, "get")
+            ($isSetter = str_starts_with($method, self::SET)) ||
+            str_starts_with($method, self::GET)
         ) {
             $property = lcfirst(substr($method, 3));
 
             if ($isSetter) {
-                if ($this->hasSetterAttribute($property)) {
+                if ($this->isCallable(self::SET, $property)) {
                     $this->applyFromSetter($property, $args[0]);
                     return $this;
                 }
             } else {
-                if ($this->hasGetterAttribute($property)) {
+                if ($this->isCallable(self::GET, $property)) {
                     return $this->$property;
                 }
             }
@@ -143,6 +153,29 @@ trait PropertyAccessorTrait
 
         throw new BadMethodCallException("$method not found.");
     }
+
+
+    protected function isCallable(string $accessType, string $property): bool
+    {
+        $attributeCfg = $accessType === self::GET
+            ? $this->hasGetterAttribute($property)
+            : $this->hasSetterAttribute($property);
+
+        if ($attributeCfg === false) {
+            return false;
+        }
+
+        if (count($attributeCfg) && $attributeCfg[0] === Modifier::PROTECTED) {
+            $bt = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 3);
+            if ($bt[2]["class"] !== get_class() && !is_subclass_of($this, $bt[2]["class"], true)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+
 
     /**
      * @param string $property
@@ -202,33 +235,33 @@ trait PropertyAccessorTrait
             $propertyName = $parameter->getName();
 
             if (isset($args[$index]) && $this->hasSetterAttribute($propertyName)) {
-                $this->__call("set" . ucfirst($parameter->getName()), [$args[$index]]);
+                $this->__call(self::SET . ucfirst($parameter->getName()), [$args[$index]]);
             }
         }
     }
 
 
-    private function hasSetterAttribute(string $propertyName): bool
+    private function hasSetterAttribute(string $propertyName): array|false
     {
         if (!$this->setterCache) {
             $this->setterCache = $this->cachePropertiesWithAccessorAttribute(Setter::class);
         }
 
-        return isset($this->setterCache[$propertyName]) && $this->setterCache[$propertyName] === true;
+        return $this->setterCache[$propertyName] ?? false;
     }
 
-    private function hasGetterAttribute(string $propertyName): bool
+    private function hasGetterAttribute(string $propertyName): array|false
     {
         if (!$this->getterCache) {
             $this->getterCache = $this->cachePropertiesWithAccessorAttribute(Getter::class);
         }
 
-        return isset($this->getterCache[$propertyName]) && $this->getterCache[$propertyName] === true;
+        return $this->getterCache[$propertyName] ?? false;
     }
 
 
     /**
-     * @return array<string, bool>
+     * @return array<string, array>
      */
     private function cachePropertiesWithAccessorAttribute(string $accessorClass): array
     {
@@ -239,24 +272,54 @@ trait PropertyAccessorTrait
         $propBag = [];
 
         $reflectionClass = new ReflectionClass($this);
+        $classAccessorAttribute = $reflectionClass->getAttributes($accessorClass);
 
-        $hasClassAccessorAttribute = $reflectionClass->getAttributes($accessorClass);
+        $properties = $this->harvestProperties($reflectionClass);
 
-        $parameters = array_merge(
-            $this->getConstructorParameters($reflectionClass),
-            $reflectionClass->getProperties()
-        );
+        foreach ($properties as $property) {
+            $propertyName = $property->getName();
 
-        foreach ($parameters as $parameter) {
-            $propertyName = $parameter->getName();
-            $hasAccessor = $hasClassAccessorAttribute || $parameter->getAttributes($accessorClass);
+            if (in_array($propertyName, ["getterCache", "setterCache"])) {
+                continue;
+            }
 
-            if ($hasAccessor) {
-                $propBag[$propertyName] = true;
+            $accessorAttribute = $classAccessorAttribute;
+
+            if (empty($accessorAttribute)) {
+                $accessorAttribute = $property->getAttributes($accessorClass);
+            }
+
+            if (!empty($accessorAttribute)) {
+                $propBag[$propertyName] = $accessorAttribute[0]->getArguments() ?? [];
             }
         }
 
         return $propBag;
+    }
+
+    /**
+     * @param ReflectionClass $reflectionClass
+     * @return array<int, ReflectionParameter|ReflectionProperty>
+     */
+    private function harvestProperties(ReflectionClass $reflectionClass): array
+    {
+        $properties = array_merge(
+            $this->getConstructorParameters($reflectionClass),
+            $reflectionClass->getProperties()
+        );
+
+        // parent
+        $parent = $reflectionClass->getParentClass();
+        while ($parent) {
+            $properties = array_merge(
+                $properties,
+                $this->getConstructorParameters($parent),
+                $parent->getProperties()
+            );
+            $parent = $parent->getParentClass();
+        }
+
+        return $properties;
     }
 
 

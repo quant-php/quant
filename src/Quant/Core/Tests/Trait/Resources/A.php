@@ -26,22 +26,28 @@
 
 declare(strict_types=1);
 
-namespace Tests\Quant\Traits;
+namespace Quant\Core\Tests\Trait\Resources;
 
-use Quant\Attributes\Setter;
-use Quant\Attributes\Getter;
-use Quant\Traits\PropertyAccessorTrait;
+use Quant\Core\Trait\AccessorGenerator;
+use Quant\Core\Attribute\Getter;
+use Quant\Core\Attribute\Setter;
+use Quant\Core\Lang\Modifier;
 use ValueError;
 
 /**
- * @method string setFoo(string $a)
- * @method string setFoobar(string $b)
+ * @method A setFoo(string $a)
+ * @method A setFoobar(string $b)
  * @method string getFoo()
- * @method int setValueErrorTrigger(int $a).
+ * @method string getProtectedVar()
+ * @method A setProtectedVar(string $a)
+ * @method A setValueErrorTrigger(int $a).
  */
-class WithPropertyAccessorTrait
+class A
 {
-    use PropertyAccessorTrait;
+    use AccessorGenerator;
+
+    #[Getter(Modifier::PROTECTED)] #[Setter(Modifier::PROTECTED)]
+    private string $protectedVar = "protected";
 
     #[Setter]
     private int $valueErrorTrigger;
@@ -49,10 +55,13 @@ class WithPropertyAccessorTrait
     #[Setter]
     public string $foobar = "Ok";
 
+    #[Setter] #[Getter]
+    private int $privateVar;
+
     private string $snafu;
     public function __construct(
         #[Setter] #[Getter]
-        public string $foo
+        private string $foo
     ) {
         $this->configureProperties(func_get_args());
     }
@@ -74,5 +83,15 @@ class WithPropertyAccessorTrait
             throw new ValueError("invalid value for valueErrorTrigger: must be >= 2");
         }
         return $value;
+    }
+
+    public function proxyProtectedVar(): string
+    {
+        return $this->getProtectedVar();
+    }
+
+    public function setProxyProtectedVar(string $a): A
+    {
+        return $this->setProtectedVar($a);
     }
 }

@@ -26,15 +26,11 @@
 
 declare(strict_types=1);
 
-namespace Tests\Quant\Attributes;
+namespace Quant\Core\Attribute;
 
-use PHPUnit\Framework\TestCase;
-use Quant\Attributes\Setter;
+use Attribute;
 
-class SetterTest extends TestCase
+#[Attribute]
+class Getter
 {
-    public function testSetter(): void
-    {
-        $this->assertInstanceOf(Setter::class, new Setter());
-    }
 }

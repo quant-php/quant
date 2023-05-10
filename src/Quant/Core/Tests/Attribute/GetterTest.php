@@ -27,10 +27,10 @@
 
 declare(strict_types=1);
 
-namespace Tests\Quant\Attributes;
+namespace Quant\Core\Tests\Attribute;
 
 use PHPUnit\Framework\TestCase;
-use Quant\Attributes\Getter;
+use Quant\Core\Attribute\Getter;
 
 class GetterTest extends TestCase
 {
