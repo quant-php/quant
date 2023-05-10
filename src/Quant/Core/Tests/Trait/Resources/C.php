@@ -26,42 +26,8 @@
 
 declare(strict_types=1);
 
-namespace Tests\Quant\Traits;
+namespace Quant\Core\Tests\Trait\Resources;
 
-use Quant\Attributes\Setter;
-use Quant\Attributes\Getter;
-use Quant\Traits\PropertyAccessorTrait;
-use ValueError;
-
-/**
- * @method ClassHasAttributes setFoo(string $a)
- * @method string getFoo()
- *
- * @method ClassHasAttributes setFoobar(string $b)
- * @method string getFoobar()
- *
- * @method ClassHasAttributes setSnafu(string $b)
- * @method string getSnafu()
- *
- * @method ClassHasAttributes setBar(string $b)
- * @method string getBar()
- */
-#[Getter]
-#[Setter]
-class ClassHasAttributes
+class C extends B
 {
-    use PropertyAccessorTrait;
-
-    #[Setter]
-    public string $foobar = "Ok";
-
-    #[Getter]
-    private string $snafu;
-
-    public function __construct(
-        #[Setter] #[Getter]
-        public string $foo,
-        protected string $bar,
-    ) {
-    }
 }

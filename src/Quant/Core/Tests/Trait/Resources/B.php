@@ -26,11 +26,21 @@
 
 declare(strict_types=1);
 
-namespace Quant\Attributes;
+namespace Quant\Core\Tests\Trait\Resources;
 
-use Attribute;
+use Quant\Core\Attribute\Getter;
+use Quant\Core\Attribute\Setter;
 
-#[Attribute]
-class Getter
+/**
+ *
+ */
+class B extends A
 {
+    #[Getter] #[Setter]
+    public string $foobar = "Ok";
+
+    public function __construct(string $foo, $noArg = true)
+    {
+        parent::__construct($foo);
+    }
 }
