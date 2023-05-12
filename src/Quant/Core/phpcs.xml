@@ -2,6 +2,9 @@
 <ruleset name="quant-php/php coding standards">
     <description>The coding standard (PSR-12) for quant/core</description>
 
+    <file>./</file>
+    <exclude-pattern>/vendor/*</exclude-pattern>
+
     <rule ref="PSR12" />
 
     <rule ref="Generic.PHP.RequireStrictTypes" />

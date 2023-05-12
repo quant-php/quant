@@ -3,7 +3,7 @@
     "type": "library",
     "description": "PHP library",
     "keywords": ["framework"],
-    "homepage": "https://github.com/quant-php",
+    "homepage": "https://quant-php.dev",
     "license": "MIT",
     "authors": [
         {
@@ -13,7 +13,11 @@
         }
     ],
     "require": {
-        "php": "^8.2"
+        "php": "^8.2",
+        "composer-runtime-api": ">=2.1"
+    },
+    "replace": {
+        "quant/core": "self.version"
     },
     "require-dev": {
         "phpunit/phpunit": "^10.1",
@@ -22,12 +26,10 @@
     },
     "autoload": {
         "psr-4": {
-            "Quant\\": "src"
-        }
-    },
-    "autoload-dev": {
-        "psr-4": {
-            "Tests\\Quant\\": "tests/"
-        }
+            "Quant\\": "src/Quant"
+        },
+        "exclude-from-classmap": [
+            "**/Tests/"
+        ]
     }
 }
