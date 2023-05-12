@@ -13,9 +13,16 @@ declare(strict_types=1);
 
 namespace Quant\Core\Attribute;
 
-use Attribute;
+use Quant\Core\Lang\Modifier;
 
-#[Attribute]
-final class Getter extends Accessor
+abstract class Accessor
 {
+    public function __construct(private readonly Modifier $accessLevel = Modifier::PUBLIC)
+    {
+    }
+
+    public function getAccessLevel(): Modifier
+    {
+        return $this->accessLevel;
+    }
 }
