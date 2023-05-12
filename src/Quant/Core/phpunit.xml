@@ -5,10 +5,12 @@
          xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.1/phpunit.xsd"
          cacheDirectory=".phpunit.cache"
          displayDetailsOnTestsThatTriggerWarnings="true"
+         failOnRisky="true"
+         failOnWarning="true"
   >
   <coverage/>
   <testsuites>
-    <testsuite name="Application Test Suite">
+    <testsuite name="Quant\\Core Test Suite">
       <directory suffix="Test.php">./Tests</directory>
     </testsuite>
   </testsuites>
