@@ -1,7 +1,7 @@
 {
     "name": "quant/core",
     "type": "library",
-    "description": "PHP library",
+    "description": "Low-level API providing contracts and base implementations for PHP projects.",
     "keywords": ["framework"],
     "homepage": "https://quant-php.dev",
     "license": "MIT",
