@@ -28,7 +28,7 @@ declare(strict_types=1);
 
 namespace Quant\Core\Tests\Trait\Resources;
 
-use Quant\Core\Trait\AccessorGenerator;
+use Quant\Core\Trait\AccessorTrait;
 use Quant\Core\Attribute\Getter;
 use Quant\Core\Attribute\Setter;
 use Quant\Core\Lang\Modifier;
@@ -50,7 +50,7 @@ use ValueError;
  */
 class A
 {
-    use AccessorGenerator;
+    use AccessorTrait;
 
     #[Getter(Modifier::PROTECTED)] #[Setter(Modifier::PROTECTED)]
     private string $protectedVar = "protected";

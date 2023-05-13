@@ -38,7 +38,7 @@ use ReflectionProperty;
 use TypeError;
 use ValueError;
 
-trait AccessorGenerator
+trait AccessorTrait
 {
     private const GET = "get";
     private const SET = "set";

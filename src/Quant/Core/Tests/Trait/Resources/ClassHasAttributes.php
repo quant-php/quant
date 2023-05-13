@@ -29,7 +29,7 @@ declare(strict_types=1);
 namespace Quant\Core\Tests\Trait\Resources;
 
 use Quant\Core\Lang\Modifier;
-use Quant\Core\Trait\AccessorGenerator;
+use Quant\Core\Trait\AccessorTrait;
 use Quant\Core\Attribute\Getter;
 use Quant\Core\Attribute\Setter;
 
@@ -50,7 +50,7 @@ use Quant\Core\Attribute\Setter;
 #[Setter]
 class ClassHasAttributes
 {
-    use AccessorGenerator;
+    use AccessorTrait;
 
     #[Setter]
     public string $foobar = "Ok";

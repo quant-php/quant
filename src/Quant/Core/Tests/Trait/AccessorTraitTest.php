@@ -36,7 +36,7 @@ use Quant\Core\Tests\Trait\Resources\C;
 use Quant\Core\Tests\Trait\Resources\ClassHasAttributes;
 use ValueError;
 
-class AccessorGeneratorTest extends TestCase
+class AccessorTraitTest extends TestCase
 {
     public function testA(): void
     {
@@ -94,7 +94,7 @@ class AccessorGeneratorTest extends TestCase
     }
 
 
-    public function testAccessorGeneratorWithDifferentValues(): void
+    public function testAccessorTraitWithDifferentValues(): void
     {
         $this->expectException(ValueError::class);
         $this->expectExceptionMessage(">= 2");
