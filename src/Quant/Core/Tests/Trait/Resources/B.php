@@ -45,7 +45,6 @@ use Quant\Core\Lang\Modifier;
  */
 class B extends A
 {
-
     /* @phpstan-ignore-next-line */
     #[Getter(Modifier::PRIVATE)] #[Setter(Modifier::PRIVATE)] private bool $valid = false;
 
