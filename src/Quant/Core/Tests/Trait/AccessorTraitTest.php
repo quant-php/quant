@@ -1,27 +1,12 @@
 <?php
 
 /**
- * MIT License
+ * This file is part of the quant project.
  *
- * Copyright (c) 2023 Thorsten Suckow-Homberg https://github.com/quant-php/quant
+ * (c) 2023 Thorsten Suckow-Homberg <thorsten@suckow-homberg.de>
  *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+ * For full copyright and license information, please consult the LICENSE-file distributed
+ * with this source code.
  */
 
 declare(strict_types=1);
@@ -36,7 +21,7 @@ use Quant\Core\Tests\Trait\Resources\C;
 use Quant\Core\Tests\Trait\Resources\ClassHasAttributes;
 use ValueError;
 
-class AccessorGeneratorTest extends TestCase
+class AccessorTraitTest extends TestCase
 {
     public function testA(): void
     {
@@ -64,6 +49,16 @@ class AccessorGeneratorTest extends TestCase
         // guarded
         $this->assertSame($anotherInst, $anotherInst->setFoo("noset"));
         $this->assertSame("foo", $anotherInst->getFoo());
+
+        $this->assertTrue($inst->isBool());
+        $this->assertSame("true", $inst->getNotBool());
+
+        try {
+            /* @phpstan-ignore-next-line */
+            $inst->isNotBool();
+            $this->fail("Exception excepted");
+        } catch (BadMethodCallException$e) {
+        }
     }
 
 
@@ -84,7 +79,7 @@ class AccessorGeneratorTest extends TestCase
     }
 
 
-    public function testAccessorGeneratorWithDifferentValues(): void
+    public function testAccessorTraitWithDifferentValues(): void
     {
         $this->expectException(ValueError::class);
         $this->expectExceptionMessage(">= 2");
@@ -109,7 +104,7 @@ class AccessorGeneratorTest extends TestCase
         $inst->setProtectedVar("foo");
     }
 
-    public function testB(): void
+    public function testBInstance(): void
     {
         $args_1 = [
             "foo" => "Hello World"
@@ -122,10 +117,13 @@ class AccessorGeneratorTest extends TestCase
 
         $inst->setFoobar("oofrab");
         $this->assertSame("oofrab", $inst->getFoobar());
-        $inst->getFoobar();
 
         $inst->setPrivateVar(123);
         $this->assertSame(123, $inst->getPrivateVar());
+
+        $this->assertFalse($inst->proxyIsValid());
+        $this->assertSame($inst, $inst->proxySetValid(true));
+        $this->assertTrue($inst->proxyIsValid());
     }
 
     public function testC(): void
@@ -142,8 +140,15 @@ class AccessorGeneratorTest extends TestCase
         $this->assertNotSame("updated", $inst->proxyProtectedVar());
         $inst->setProxyProtectedVar("updated");
         $this->assertSame("updated", $inst->proxyProtectedVar());
-    }
 
+        $this->assertNotSame("new value", $inst->getGuarded());
+        $inst->setGuarded("new value");
+        $this->assertSame("new value", $inst->getGuarded());
+
+        $this->assertNotSame("new value", $inst->getProtectedGuard());
+        $inst->setProtectedGuard("will be ignored");
+        $this->assertSame("protected guard", $inst->getProtectedGuard());
+    }
 
 
     public function testProtectedPropertyWithProxy(): void

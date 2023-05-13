@@ -3,6 +3,7 @@
     <description>The coding standard (PSR-12) for quant-php/quant</description>
 
     <file>src/</file>
+    <exclude-pattern>/vendor/*</exclude-pattern>
 
     <rule ref="PSR12" />
 

@@ -1,5 +1,7 @@
 parameters:
 	level: 9
+	excludePaths:
+	    - /*/vendor/*
 	paths:
-		- src
-		- tests
+	    - src
+

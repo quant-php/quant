@@ -1,0 +1,46 @@
+name: Unit Tests
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  php-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      COMPOSER_NO_INTERACTION: 1
+      LC_ALL: en_US.UTF-8
+
+    strategy:
+      matrix:
+        php: [8.2]
+        dependency-version: [prefer-stable]
+
+    name: P${{ matrix.php }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: none
+          tools: composer:v2
+
+      - name: Install dependencies
+        run: composer install --no-progress
+
+      - name: Check Project Coding Standards
+        run: vendor/bin/phpcs
+
+      - name: run phpstan
+        run: vendor/bin/phpstan
+
+      - name: Execute Unit Tests
+        run: ./vendor/bin/phpunit --do-not-cache-result
+

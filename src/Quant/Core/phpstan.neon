@@ -1,2 +1,7 @@
 parameters:
 	level: 9
+	excludePaths:
+	    - vendor
+	paths:
+	    - .
+
