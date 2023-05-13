@@ -35,12 +35,18 @@ use Quant\Core\Lang\Modifier;
 use ValueError;
 
 /**
+ * @method A setPrivateVar(int $b)
+ * @method int getPrivateVar()
  * @method A setFoo(string $a)
  * @method A setFoobar(string $b)
  * @method string getFoo()
  * @method string getProtectedVar()
  * @method A setProtectedVar(string $a)
  * @method A setValueErrorTrigger(int $a).
+ * @method bool isBool()
+ * @method string getNotBool()
+ * @method A setProtectedGuard(string $s)
+ * @method string getProtectedGuard()
  */
 class A
 {
@@ -58,12 +64,21 @@ class A
     #[Setter] #[Getter]
     private int $privateVar;
 
+    #[Getter]
+    private bool $bool = true;
+
+    #[Getter]
+    private string $notBool = "true";
+
+    #[Setter] #[Getter]
+    private string $protectedGuard = "";
+
     private string $snafu;
     public function __construct(
         #[Setter] #[Getter]
         private string $foo
     ) {
-        $this->configureProperties(func_get_args());
+        $this->applyProperties(func_get_args());
     }
 
 
@@ -93,5 +108,10 @@ class A
     public function setProxyProtectedVar(string $a): A
     {
         return $this->setProtectedVar($a);
+    }
+
+    protected function applyProtectedGuard(string $f): string
+    {
+        return "set in parent";
     }
 }

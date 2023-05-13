@@ -38,86 +38,20 @@ use ReflectionProperty;
 use TypeError;
 use ValueError;
 
-/**
- * Provides read-/write-access to object properties attributed with `#[Setter]`.
- * For each property (or constructor parameter, e.g. using constructor property promotion) that has such an attribute,
- * a `set[Property_Name]`-method will be available that can be called to set the property.
- * Such `setter`-methods can be guarded with an `apply[Property_Name]`-method: Implementing clients can provide
- * further specifications regarding the domain the property belongs to. The `apply`-method is called by the
- * `set`-method: if such an `apply`-method exists, its return-value will be used as the value for the property whose
- * setter was called. The return of the setter will be *this* instance.
- * Getters in turn can be installed using the #[Getter] attribute.
- *
- * If the class itself is attributed with #[Getter] or #[Setter], for all properties of the class individual getters
- * and setters will be made available.
- *
- * @example
- *
- * ```php
- *    use Setter;
- *    use AccessorGenerator;
- *    use const Quant\Core\Constants\ACCESS_LEVEL_PROTECTED as ACCESS_PROTECTED;
- *    use const Quant\Core\Constants\ACCESS_LEVEL_PUBLIC as ACCESS_PUBLIC;
- *
- *    class Target {
- *         trait AccessorGenerator;
- *
- *         #[Setter]
- *         public bool $state = true;
- *
- *         #[Getter(accessLevel: PROTECTED_ACCESS)]
- *         private string $protectedProperty = "access protected";
- *
- *         public function __construct(
- *              #[Setter]#[Getter]
- *              public string $value,
- *              #[Setter]
- *              bool $state
- *          ) {
- *         {
- *              $this->configureProperties(func_get_args());
- *         }
- *
- *         protected function applyState($value): mixed
- *         {
- *             return true;
- *         }
- *
- *         protected function applyValue($value): mixed
- *         {
- *             return strtoupper($value);
- *         }
- *
- *     }
- *
- *    $target = new Target("Hello World", false);
- *
- *    $target->setValue("Hello World");
- *    echo $target->value; // "HELLO WORLD"
- *    echo $target->getValue(); // "HELLO WORLD"
- *    try {
- *       $target->setState(false);
- *    } catch (ValueError $err) {
- *      echo "Cannot set the value for state: ". $err->getMessage();
- *      die();
- *   }
- *
- *    // the applyState() will take care of always returning true, so $state is never set to false.
- *     echo $target->state; // true
- * ```
- */
 trait AccessorGenerator
 {
     private const GET = "get";
     private const SET = "set";
 
+    private const IS = "is";
+
     /**
-     * @var array<string, array>
+     * @var array<string, array<string, array<int, int>|string>>
      */
     private ?array $setterCache = null;
 
     /**
-     * @var array<string, array>
+     * @var array<string, array<string, array<int, int>|string>>
      */
     private ?array $getterCache = null;
 
@@ -133,20 +67,30 @@ trait AccessorGenerator
      */
     public function __call($method, $args): mixed
     {
+        $isGetter = $isBooleanGetter = false;
+
         if (
-            ($isSetter = str_starts_with($method, self::SET)) ||
-            str_starts_with($method, self::GET)
+            ($isSetter        = str_starts_with($method, self::SET)) ||
+            ($isGetter        = str_starts_with($method, self::GET)) ||
+            ($isBooleanGetter = str_starts_with($method, self::IS))
         ) {
-            $property = lcfirst(substr($method, 3));
+            $property = lcfirst(substr($method, ($isSetter || $isGetter) ? 3 : 2));
 
             if ($isSetter) {
-                if ($this->isCallable(self::SET, $property)) {
-                    $this->applyFromSetter($property, $args[0]);
+                if (($propertyCfg = $this->isCallable(self::SET, $property)) !== false) {
+                    $this->applyFromSetter($property, $args[0], $propertyCfg);
                     return $this;
                 }
             } else {
-                if ($this->isCallable(self::GET, $property)) {
-                    return $this->$property;
+                if (($propertyCfg = $this->isCallable($isBooleanGetter ? self::IS : self::GET, $property))) {
+                    /**
+                     * @var string $decl
+                     */
+                    $decl =  $propertyCfg["decl"];
+                    $fn = \Closure::bind(fn ($property) => $this->{$property}, $this, $decl);
+                    return $fn($property);
+
+                   // return $propertyCfg["property"]->getValue($this);
                 }
             }
         }
@@ -155,79 +99,99 @@ trait AccessorGenerator
     }
 
 
-    protected function isCallable(string $accessType, string $property): bool
+    /**
+     * @param string $accessType
+     * @param string $property
+     * @return false|array<string, array<int, int>|string>
+     */
+    private function isCallable(string $accessType, string $property): false|array
     {
-        $attributeCfg = $accessType === self::GET
+        $propertyCfg = $accessType === self::GET || $accessType === self::IS
             ? $this->hasGetterAttribute($property)
             : $this->hasSetterAttribute($property);
 
-        if ($attributeCfg === false) {
+        if ($propertyCfg === false) {
             return false;
         }
 
-        if (count($attributeCfg) && $attributeCfg[0] === Modifier::PROTECTED) {
+        // property must be declared in a parent class of **this**
+        if (!($this instanceof $propertyCfg["decl"])) {
+            return false;
+        }
+
+        $type = $propertyCfg["type"];
+        if (
+            $type === "bool" && $accessType === self::GET ||
+            $type !== "bool" && $accessType === self::IS
+        ) {
+            return false;
+        }
+
+        $argCfg = $propertyCfg["args"];
+        if (!empty($argCfg) && in_array($argCfg[0], [Modifier::PROTECTED, Modifier::PRIVATE])) {
+            $accessLevel = $propertyCfg["args"][0];
+
             $bt = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 3);
-            if ($bt[2]["class"] !== get_class() && !is_subclass_of($this, $bt[2]["class"], true)) {
+
+            if (
+                /* @phpstan-ignore-next-line */
+                $accessLevel === Modifier::PROTECTED &&
+                /* @phpstan-ignore-next-line */
+                $bt[2]["class"] !== get_class($this) &&
+                /* @phpstan-ignore-next-line */
+                !is_subclass_of($this, $bt[2]["class"], true)
+            ) {
+                return false;
+            }
+            if (
+                /* @phpstan-ignore-next-line */
+                $accessLevel === Modifier::PRIVATE &&
+                /* @phpstan-ignore-next-line */
+                $bt[2]["class"] !== $propertyCfg["decl"]
+            ) {
                 return false;
             }
         }
 
-        return true;
+        return $propertyCfg;
     }
-
 
 
     /**
      * @param string $property
      * @param mixed $value
+     * @param array<string, array<int, int>|string> $propertyCfg
      * @return void
      *
-     * @throws ValueError
-     * @throws TypeError
      */
-    private function applyFromSetter(string $property, mixed $value): void
+    private function applyFromSetter(string $property, mixed $value, array $propertyCfg): void
     {
         $applier = "apply" . ucfirst($property);
-
+        /**
+         * @var string $declaringClass
+         */
+        $declaringClass = $propertyCfg["decl"];
         $newValue = $value;
-        if (method_exists($this, $applier)) {
+
+        if (method_exists($this, $applier) && is_callable($applier)) {
             $newValue = $this->{$applier}($value);
+        } elseif (method_exists($declaringClass, $applier)) {
+            // if the apoplier was not found, it is possible that it was declared
+            // as private in the property declaring class
+            $fn = \Closure::bind(fn ($value) => $this->{$applier}($value), $this, $declaringClass);
+            $newValue = $fn($newValue);
         }
-        $this->$property = $newValue;
+
+        // $propertyCfg["property"]->setValue($this, $newValue);
+        $fn = \Closure::bind(fn ($newValue) => $this->{$property} = $newValue, $this, $declaringClass);
+        $fn($newValue);
     }
 
 
     /**
-     * Configures the  properties of this class with the values available in $args.
-     * The ordinal value of the individual entries in $args is expected to match the ordinal value of the parameter
-     * that is to be configured with the value, e.g. to apply a value to parameter $b of the following constructor
-     *
-     * `__construct($a, $b)`
-     *
-     * an array in the form of
-     *
-     * `$args = [1 => "value_of_b"]`
-     *
-     * Must be passed to this method.
-     * This can be automated by calling this method from the constructor with the value of `func_get_args()`:
-     *
-     * ```php
-     *    public function __construct(
-     *        private string $a,
-     *        #[Setter]
-     *        private string $b
-     *    ) {
-     *        $this->configureProperties(func_get_args());
-     *    }
-     * ```
-     *
-     * Note that only those properties will be set that have an Attribute-Annotation `#[Setter]` configured. For
-     * these properties, the appropriate `set[Property_Name]()`-method will be called.
-     *
      * @param array<int, mixed> $args
-     * @return void
      */
-    private function configureProperties(array $args): void
+    private function applyProperties(array $args): void
     {
         $parameters = $this->getConstructorParameters();
 
@@ -241,6 +205,10 @@ trait AccessorGenerator
     }
 
 
+    /**
+     * @param string $propertyName
+     * @return array<string, array<int, int>|string>|false
+     */
     private function hasSetterAttribute(string $propertyName): array|false
     {
         if (!$this->setterCache) {
@@ -250,6 +218,11 @@ trait AccessorGenerator
         return $this->setterCache[$propertyName] ?? false;
     }
 
+
+    /**
+     * @param string $propertyName
+     * @return array<string, array<int, int>|string>|false
+     */
     private function hasGetterAttribute(string $propertyName): array|false
     {
         if (!$this->getterCache) {
@@ -261,7 +234,7 @@ trait AccessorGenerator
 
 
     /**
-     * @return array<string, array>
+     * @return array<string, array<string, array<int, int>|string>>
      */
     private function cachePropertiesWithAccessorAttribute(string $accessorClass): array
     {
@@ -289,8 +262,14 @@ trait AccessorGenerator
                 $accessorAttribute = $property->getAttributes($accessorClass);
             }
 
-            if (!empty($accessorAttribute)) {
-                $propBag[$propertyName] = $accessorAttribute[0]->getArguments() ?? [];
+            if (!empty($accessorAttribute) && ($property instanceof ReflectionProperty)) {
+                $propBag[$propertyName] = [
+                    "args" => $accessorAttribute[0]->getArguments() ?: [],
+                    /*__toString vs getName */
+                    /* @phpstan-ignore-next-line */
+                    "type" => $property->getType()?->getName(),
+                    "decl" => $property->getDeclaringClass()->getName()
+                ];
             }
         }
 
@@ -298,7 +277,7 @@ trait AccessorGenerator
     }
 
     /**
-     * @param ReflectionClass $reflectionClass
+     * @param ReflectionClass<Object> $reflectionClass
      * @return array<int, ReflectionParameter|ReflectionProperty>
      */
     private function harvestProperties(ReflectionClass $reflectionClass): array

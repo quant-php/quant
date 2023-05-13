@@ -64,6 +64,16 @@ class AccessorGeneratorTest extends TestCase
         // guarded
         $this->assertSame($anotherInst, $anotherInst->setFoo("noset"));
         $this->assertSame("foo", $anotherInst->getFoo());
+
+        $this->assertTrue($inst->isBool());
+        $this->assertSame("true", $inst->getNotBool());
+
+        try {
+            /* @phpstan-ignore-next-line */
+            $inst->isNotBool();
+            $this->fail("Exception excepted");
+        } catch (BadMethodCallException$e) {
+        }
     }
 
 
@@ -109,7 +119,7 @@ class AccessorGeneratorTest extends TestCase
         $inst->setProtectedVar("foo");
     }
 
-    public function testB(): void
+    public function testBInstance(): void
     {
         $args_1 = [
             "foo" => "Hello World"
@@ -122,10 +132,13 @@ class AccessorGeneratorTest extends TestCase
 
         $inst->setFoobar("oofrab");
         $this->assertSame("oofrab", $inst->getFoobar());
-        $inst->getFoobar();
 
         $inst->setPrivateVar(123);
         $this->assertSame(123, $inst->getPrivateVar());
+
+        $this->assertFalse($inst->proxyIsValid());
+        $this->assertSame($inst, $inst->proxySetValid(true));
+        $this->assertTrue($inst->proxyIsValid());
     }
 
     public function testC(): void
@@ -142,8 +155,15 @@ class AccessorGeneratorTest extends TestCase
         $this->assertNotSame("updated", $inst->proxyProtectedVar());
         $inst->setProxyProtectedVar("updated");
         $this->assertSame("updated", $inst->proxyProtectedVar());
-    }
 
+        $this->assertNotSame("new value", $inst->getGuarded());
+        $inst->setGuarded("new value");
+        $this->assertSame("new value", $inst->getGuarded());
+
+        $this->assertNotSame("new value", $inst->getProtectedGuard());
+        $inst->setProtectedGuard("will be ignored");
+        $this->assertSame("protected guard", $inst->getProtectedGuard());
+    }
 
 
     public function testProtectedPropertyWithProxy(): void

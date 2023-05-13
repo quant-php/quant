@@ -28,6 +28,13 @@ declare(strict_types=1);
 
 namespace Quant\Core\Tests\Trait\Resources;
 
+/**
+ *
+ */
 class C extends B
 {
+    protected function applyProtectedGuard(string $f): string
+    {
+        return "protected guard";
+    }
 }
