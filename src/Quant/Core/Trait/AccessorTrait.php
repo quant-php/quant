@@ -110,7 +110,7 @@ trait AccessorTrait
             return false;
         }
 
-        $accessLevel = isset($propertyCfg["args"][0]) ?: null;
+        $accessLevel = $propertyCfg["args"][0] ?? Modifier::PUBLIC;
 
         /* @phpstan-ignore-next-line */
         if ($accessLevel === Modifier::PROTECTED || $accessLevel === Modifier::PRIVATE) {
