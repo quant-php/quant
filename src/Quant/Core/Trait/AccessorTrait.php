@@ -158,8 +158,8 @@ trait AccessorTrait
         if (method_exists($this, $applier) && is_callable($applier)) {
             $newValue = $this->{$applier}($value);
         } elseif (method_exists($declaringClass, $applier)) {
-            // if the apoplier was not found, it is possible that it was declared
-            // as private in the property declaring class
+            // if the applier was not found, it is possible that it was declared
+            // as private in the property's declaring class
             $fn = \Closure::bind(fn ($value) => $this->{$applier}($value), $this, $declaringClass);
             $newValue = $fn($newValue);
         }
@@ -291,11 +291,7 @@ trait AccessorTrait
         }
 
         $constructor = $reflectionClass->getConstructor();
-        $parameters = [];
-        if ($constructor) {
-            $parameters = $constructor->getParameters();
-        }
 
-        return $parameters;
+        return $reflectionClass->getConstructor() ? $constructor->getParameters() : [];
     }
 }
