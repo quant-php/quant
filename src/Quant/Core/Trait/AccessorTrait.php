@@ -110,26 +110,22 @@ trait AccessorTrait
             return false;
         }
 
-        $argCfg = $propertyCfg["args"];
+        $accessLevel = isset($propertyCfg["args"][0]) ?: null;
 
-        if ($argCfg && ($argCfg[0] === Modifier::PROTECTED || $argCfg[0] === Modifier::PRIVATE)) {
-            $accessLevel = $propertyCfg["args"][0];
+        /* @phpstan-ignore-next-line */
+        if ($accessLevel === Modifier::PROTECTED || $accessLevel === Modifier::PRIVATE) {
 
             $bt = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 3);
 
             if (
                 /* @phpstan-ignore-next-line */
-                $accessLevel === Modifier::PROTECTED &&
-                /* @phpstan-ignore-next-line */
-                (!($this instanceof $bt[2]["class"])) //is_subclass_of($this, $bt[2]["class"], true)
+                $accessLevel === Modifier::PROTECTED && !($this instanceof $bt[2]["class"])
             ) {
                 return false;
             }
             if (
                 /* @phpstan-ignore-next-line */
-                $accessLevel === Modifier::PRIVATE &&
-                /* @phpstan-ignore-next-line */
-                $bt[2]["class"] !== $propertyCfg["decl"]
+                $accessLevel === Modifier::PRIVATE && $bt[2]["class"] !== $propertyCfg["decl"]
             ) {
                 return false;
             }
@@ -292,6 +288,7 @@ trait AccessorTrait
 
         $constructor = $reflectionClass->getConstructor();
 
+        /* @phpstan-ignore-next-line */
         return $reflectionClass->getConstructor() ? $constructor->getParameters() : [];
     }
 }
