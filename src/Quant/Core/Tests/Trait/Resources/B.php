@@ -27,6 +27,9 @@ use Quant\Core\Lang\Modifier;
  * @method string getFoobar()
  * @method B setFoobar(string $s)
  *
+ * @method B setPublicGuard(string $s)
+ * @method string getPublicGuard()
+ *
  */
 class B extends A
 {
@@ -59,5 +62,10 @@ class B extends A
     private function applyGuarded(string $value): string
     {
         return $value;
+    }
+
+    protected function applyPublicGuard(string $f): string
+    {
+        return "overridden in child";
     }
 }
