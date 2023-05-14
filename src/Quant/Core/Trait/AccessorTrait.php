@@ -40,7 +40,6 @@ trait AccessorTrait
      */
     private ?array $getterCache = null;
 
-
     /**
      * @param string $method
      * @param array<int, mixed> $args
@@ -52,12 +51,12 @@ trait AccessorTrait
      */
     public function __call($method, $args): mixed
     {
-        $isGetter = $isBooleanGetter = false;
+        $isSetter = $isBooleanGetter = false;
 
         if (
-            ($isSetter        = str_starts_with($method, self::SET)) ||
             ($isGetter        = str_starts_with($method, self::GET)) ||
-            ($isBooleanGetter = str_starts_with($method, self::IS))
+            ($isBooleanGetter = str_starts_with($method, self::IS))  ||
+            ($isSetter        = str_starts_with($method, self::SET))
         ) {
             $property = lcfirst(substr($method, ($isSetter || $isGetter) ? 3 : 2));
 
@@ -68,14 +67,13 @@ trait AccessorTrait
                 }
             } else {
                 if (($propertyCfg = $this->isCallable($isBooleanGetter ? self::IS : self::GET, $property))) {
+
                     /**
                      * @var string $decl
                      */
                     $decl =  $propertyCfg["decl"];
                     $fn = \Closure::bind(fn ($property) => $this->{$property}, $this, $decl);
                     return $fn($property);
-
-                   // return $propertyCfg["property"]->getValue($this);
                 }
             }
         }
@@ -113,7 +111,8 @@ trait AccessorTrait
         }
 
         $argCfg = $propertyCfg["args"];
-        if (!empty($argCfg) && in_array($argCfg[0], [Modifier::PROTECTED, Modifier::PRIVATE])) {
+
+        if ($argCfg && ($argCfg[0] === Modifier::PROTECTED || $argCfg[0] === Modifier::PRIVATE)) {
             $accessLevel = $propertyCfg["args"][0];
 
             $bt = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 3);
@@ -122,9 +121,7 @@ trait AccessorTrait
                 /* @phpstan-ignore-next-line */
                 $accessLevel === Modifier::PROTECTED &&
                 /* @phpstan-ignore-next-line */
-                $bt[2]["class"] !== get_class($this) &&
-                /* @phpstan-ignore-next-line */
-                !is_subclass_of($this, $bt[2]["class"], true)
+                (!($this instanceof $bt[2]["class"])) //is_subclass_of($this, $bt[2]["class"], true)
             ) {
                 return false;
             }
@@ -196,7 +193,7 @@ trait AccessorTrait
      */
     private function hasSetterAttribute(string $propertyName): array|false
     {
-        if (!$this->setterCache) {
+        if ($this->setterCache === null) {
             $this->setterCache = $this->cachePropertiesWithAccessorAttribute(Setter::class);
         }
 
@@ -210,7 +207,7 @@ trait AccessorTrait
      */
     private function hasGetterAttribute(string $propertyName): array|false
     {
-        if (!$this->getterCache) {
+        if ($this->getterCache === null) {
             $this->getterCache = $this->cachePropertiesWithAccessorAttribute(Getter::class);
         }
 
@@ -223,10 +220,6 @@ trait AccessorTrait
      */
     private function cachePropertiesWithAccessorAttribute(string $accessorClass): array
     {
-        if (!in_array($accessorClass, [Setter::class, Getter::class])) {
-            throw new ValueError("accessorClass must be one of " . Setter::class . " or " . Getter::class);
-        }
-
         $propBag = [];
 
         $reflectionClass = new ReflectionClass($this);
@@ -237,7 +230,7 @@ trait AccessorTrait
         foreach ($properties as $property) {
             $propertyName = $property->getName();
 
-            if (in_array($propertyName, ["getterCache", "setterCache"])) {
+            if ($propertyName === "getterCache" || $propertyName === "setterCache") {
                 continue;
             }
 
