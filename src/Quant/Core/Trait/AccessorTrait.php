@@ -114,7 +114,6 @@ trait AccessorTrait
 
         /* @phpstan-ignore-next-line */
         if ($accessLevel === Modifier::PROTECTED || $accessLevel === Modifier::PRIVATE) {
-
             $bt = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 3);
 
             if (
