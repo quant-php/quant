@@ -2,6 +2,7 @@ parameters:
 	level: 9
 	excludePaths:
 	    - vendor
+	    - /*/Benchmarks/*
 	paths:
 	    - .
 

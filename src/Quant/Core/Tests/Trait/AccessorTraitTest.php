@@ -124,6 +124,8 @@ class AccessorTraitTest extends TestCase
         $this->assertFalse($inst->proxyIsValid());
         $this->assertSame($inst, $inst->proxySetValid(true));
         $this->assertTrue($inst->proxyIsValid());
+
+        $this->assertSame("overridden in child", $inst->setPublicGuard("")->getPublicGuard());
     }
 
     public function testC(): void

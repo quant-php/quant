@@ -58,6 +58,9 @@ class A
     #[Setter] #[Getter]
     private string $protectedGuard = "";
 
+    #[Setter] #[Getter]
+    private string $publicGuard = "";
+
     private string $snafu;
     public function __construct(
         #[Setter] #[Getter]
@@ -96,6 +99,11 @@ class A
     }
 
     protected function applyProtectedGuard(string $f): string
+    {
+        return "set in parent";
+    }
+
+    protected function applyPublicGuard(string $f): string
     {
         return "set in parent";
     }
