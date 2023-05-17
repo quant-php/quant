@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         colors="true"
+         bootstrap="vendor/autoload.php"
+         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.1/phpunit.xsd"
+         cacheDirectory=".phpunit.cache"
+         displayDetailsOnTestsThatTriggerWarnings="true"
+         displayDetailsOnTestsThatTriggerDeprecations="true"
+         displayDetailsOnTestsThatTriggerNotices="true"
+         failOnDeprecation="true"
+         failOnRisky="true"
+         stopOnDeprecation="true"
+         failOnWarning="true"
+  >
+  <coverage/>
+  <testsuites>
+    <testsuite name="Quant\\PHPStan Test Suite">
+      <directory suffix="Test.php">./Tests</directory>
+    </testsuite>
+  </testsuites>
+  <php>
+    </php>
+  <source>
+    <include>
+    </include>
+  </source>
+</phpunit>

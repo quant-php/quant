@@ -1,0 +1,9 @@
+services:
+	-
+		class: Quant\PHPStan\Rules\Properties\QuantAccessorAttributeReadWriteExtension
+
+		tags:
+			- phpstan.properties.readWriteExtension
+
+	-
+		class: Quant\PHPStan\Rules\QuantAccessorRule

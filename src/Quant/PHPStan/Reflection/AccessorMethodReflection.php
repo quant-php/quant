@@ -11,8 +11,9 @@
 
 declare(strict_types=1);
 
-namespace Quant\PHPStan;
+namespace Quant\PHPStan\Reflection;
 
+use ReflectionType;
 use PHPStan\Reflection\ClassMemberReflection;
 use PHPStan\Reflection\ClassReflection;
 use PHPStan\Reflection\FunctionVariant;
@@ -27,23 +28,13 @@ use Quant\Core\Lang\Modifier;
 
 class AccessorMethodReflection implements MethodReflection
 {
-    /** @var ClassReflection */
-    private $declaringClass;
-
-    /** @var string */
-    private $name;
-
-    /** @var $propertyCfg */
-    private $propertyCfg;
-
     public function __construct(
-        ClassReflection $declaringClass,
-        string $name,
-        array $propertyCfg
+        private ClassReflection $declaringClass,
+        private string $name,
+        private ReflectionType $propertyType,
+        private Modifier $modifier,
+        private bool $isSetter
     ) {
-        $this->declaringClass = $declaringClass;
-        $this->name = $name;
-        $this->propertyCfg = $propertyCfg;
     }
 
     public function getDeclaringClass(): ClassReflection
@@ -58,18 +49,15 @@ class AccessorMethodReflection implements MethodReflection
 
     public function isPrivate(): bool
     {
-        return $this->propertyCfg["methodModifier"] === Modifier::PRIVATE;
+        return ($this->modifier === Modifier::PRIVATE);
     }
+
 
     public function isPublic(): bool
     {
-        return $this->propertyCfg["methodModifier"] === Modifier::PUBLIC;
+        return ($this->modifier === Modifier::PUBLIC);
     }
 
-    public function isProtected(): bool
-    {
-        return $this->propertyCfg["methodModifier"] === Modifier::PROTECTED;
-    }
 
     public function getDocComment(): ?string
     {
@@ -91,19 +79,14 @@ class AccessorMethodReflection implements MethodReflection
      */
     public function getVariants(): array
     {
-        $type = $this->propertyCfg["type"];
-        $isSetter = $this->propertyCfg["prefix"] === "set";
-        $isGetter = $this->propertyCfg["prefix"] === "get";
-
-        $writeableType = TypehintHelper::decideTypeFromReflection($type);
-        $returnType = $isSetter ?  new ObjectType($this->propertyCfg["declaringClass"]) : $writeableType;
-
+        $writeableType = TypehintHelper::decideTypeFromReflection($this->propertyType);
+        $returnType = $this->isSetter ?  new ObjectType($this->declaringClass->getName()) : $writeableType;
 
         $arguments = [];
 
-        if ($isSetter) {
+        if ($this->isSetter) {
             $arguments = [
-                new DummyParameter('value', $writeableType)
+                new ValueParameter($writeableType)
             ];
         }
 
@@ -145,6 +128,6 @@ class AccessorMethodReflection implements MethodReflection
 
     public function hasSideEffects(): TrinaryLogic
     {
-        return $this->propertyCfg["prefix"] === "set" ? TrinaryLogic::createYes() : TrinaryLogic::createNo();
+        return $this->isSetter ? TrinaryLogic::createYes() : TrinaryLogic::createNo();
     }
 }
