@@ -36,12 +36,12 @@ class QuantAccessorAttributeReadWriteExtensionTest extends RuleTestCase
         $this->analyse([__DIR__ . "../../../Data/A.php"], [
             [
                 "Property Quant\PHPStan\Tests\Data\A::\$neverRead is never read, only written.",
-                38,
+                37,
                 $tip
             ],
             [
                 "Property Quant\PHPStan\Tests\Data\A::\$unused is unused.",
-                40,
+                39,
                 $tip
             ]
         ]);

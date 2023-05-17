@@ -5,3 +5,5 @@ parameters:
 	    - /*/Benchmarks/*
 	paths:
 	    - .
+includes:
+    extension.neon

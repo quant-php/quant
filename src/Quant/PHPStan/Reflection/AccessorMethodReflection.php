@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace Quant\PHPStan\Reflection;
 
+use PHPStan\Type\IntegerType;
 use ReflectionType;
 use PHPStan\Reflection\ClassMemberReflection;
 use PHPStan\Reflection\ClassReflection;
@@ -80,7 +81,7 @@ class AccessorMethodReflection implements MethodReflection
     public function getVariants(): array
     {
         $writeableType = TypehintHelper::decideTypeFromReflection($this->propertyType);
-        $returnType = $this->isSetter ?  new ObjectType($this->declaringClass->getName()) : $writeableType;
+        $returnType = $this->isSetter ? new ObjectType($this->declaringClass->getName()) : $writeableType;
 
         $arguments = [];
 

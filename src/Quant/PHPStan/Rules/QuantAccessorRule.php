@@ -24,6 +24,7 @@ use PHPStan\Rules\Rule;
 use PHPStan\Rules\RuleErrorBuilder;
 use PHPStan\Rules\RuleLevelHelper;
 use PHPStan\Type\ErrorType;
+use PHPStan\Type\ObjectType;
 use PHPStan\Type\Type;
 use PHPStan\Type\VerbosityLevel;
 use Quant\Core\Attribute\Getter;
@@ -51,7 +52,7 @@ class QuantAccessorRule implements Rule
     {
         return Node\Expr\MethodCall::class;
     }
-
+    public int $i = 0;
     public function processNode(Node $node, Scope $scope): array
     {
         $var = $node->var;
@@ -64,30 +65,76 @@ class QuantAccessorRule implements Rule
                 'Call to method %s() on an unknown class %%s.',
                 SprintfHelper::escapeFormatString($methodName)
             ),
-            static fn (Type $type): bool => $type->canCallMethods()->yes() && $type->hasMethod($methodName)->yes(),
+            static fn (Type $type): bool => true
         );
         $type = $typeResult->getType();
 
-        if ($type instanceof ErrorType) {
-            return [$typeResult->getUnknownClassErrors(), null];
-        }
 
-        $declaringClass = $scope->getType($node->var)->getObjectClassReflections()[0];
-
-
-        $cfg = false;
-        while ($declaringClass) {
-            if (($cfg = $this->hasMethod($declaringClass, $methodName)) !== false) {
-                break;
+        // chained methods
+        if ($type instanceof ErrorType) {//} && ($node->var instanceof MethodCall)) {
+            $methodCall = $node->var;
+            $stack = [];
+            while ($methodCall) {
+                if (!($methodCall instanceof MethodCall)) {
+                    break;
+                }
+                $stack[] = ["var" => $methodCall->var, "name" => $methodCall->name->name];
+                $methodCall = $methodCall->var;
             }
-            $declaringClass = $declaringClass->getParentClass();
+
+            $stack = array_reverse($stack);
+
+            $rootScope  = null;
+            $declaringClass = null;
+            foreach ($stack as $methodCall) {
+                if (!$rootScope) {
+                    $declaringClass = $scope->getType($methodCall["var"])->getObjectClassReflections()[0];
+                }
+
+                $methodName = $methodCall["name"];
+
+                if (!$declaringClass) {
+                    break;
+                }
+
+                $data = $this->queryInheritance($declaringClass, $methodName);
+
+                if (!$data) {
+                    return ["error - not found"];
+                }
+
+                $methodReflection = $data["methodReflection"];
+
+                if (!$rootScope) {
+                    $rootScope = $scope;
+                    if (!$rootScope->canCallMethod($methodReflection)) {
+                        return [
+                            "cannot call from root scope"
+                        ];
+                    }
+                }
+
+                $declaringClass = $methodReflection->getVariants()[0]->getReturnType()->getClassReflection();
+                $type = new ObjectType($declaringClass->getName());
+            }
+        } else {
+            $declaringClass = $scope->getType($node->var)->getObjectClassReflections()[0];
         }
 
-        if (
-            !$cfg ||
-            !$declaringClass ||
-            !($methodReflection = $this->getMethod($declaringClass, $methodName))
-        ) {
+        if (!$declaringClass) {
+            return [
+                RuleErrorBuilder::message(sprintf(
+                    'Cannot call method %s() on %s.',
+                    $methodName,
+                    $type->describe(VerbosityLevel::typeOnly()),
+                ))->build(),
+            ];
+        }
+
+
+        $data = $this->queryInheritance($declaringClass, $methodName);
+
+        if (!$data) {
             return [
                 RuleErrorBuilder::message(sprintf(
                     'Call to an undefined method %s::%s().',
@@ -96,6 +143,9 @@ class QuantAccessorRule implements Rule
                 ))->build()
             ];
         }
+
+        $declaringClass = $data["declaringClass"];
+        $methodReflection = $data["methodReflection"];
 
         if ($scope->canCallMethod($methodReflection)) {
             return [];
@@ -110,6 +160,31 @@ class QuantAccessorRule implements Rule
             ))->build()
         ];
     }
+
+    protected function queryInheritance(ClassReflection $declaringClass, string $methodName): false|array
+    {
+        $cfg = false;
+        while ($declaringClass) {
+            if (($cfg = $this->hasMethod($declaringClass, $methodName)) !== false) {
+                break;
+            }
+            $declaringClass = $declaringClass->getParentClass();
+        }
+
+        if (
+            !$cfg ||
+            !$declaringClass ||
+            !($methodReflection = $this->getMethod($declaringClass, $methodName))
+        ) {
+            return false;
+        }
+
+        return [
+            "declaringClass" => $declaringClass,
+            "methodReflection" => $methodReflection
+        ];
+    }
+
 
     private function hasMethod(ClassReflection $classReflection, string $methodName): false|array
     {

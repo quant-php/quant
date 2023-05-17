@@ -6,4 +6,7 @@ services:
 			- phpstan.properties.readWriteExtension
 
 	-
-		class: Quant\PHPStan\Rules\QuantAccessorRule
+		class: Quant\PHPStan\Reflection\QuantAccessorMethodReflectionExtension
+
+		tags:
+			- phpstan.broker.methodsClassReflectionExtension
