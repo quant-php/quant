@@ -11,12 +11,13 @@
 
 declare(strict_types=1);
 
-namespace Quant\PHPStan;
+namespace Quant\PHPStan\Rules\Properties;
 
 use PHPStan\Reflection\PropertyReflection;
 use PHPStan\Rules\Properties\ReadWritePropertiesExtension;
 use Quant\Core\Attribute\Getter;
 use Quant\Core\Attribute\Setter;
+use Quant\Core\Trait\AccessorTrait;
 use ReflectionException;
 
 /**
@@ -50,6 +51,22 @@ class QuantAccessorAttributeReadWriteExtension implements ReadWritePropertiesExt
     {
         $reflectionClass = $property->getDeclaringClass()->getNativeReflection();
         $reflectionProperty = $reflectionClass->getProperty($propertyName);
+
+        $parent = $reflectionClass;
+        $isTraitUsed = false;
+        while ($parent) {
+            $traits = $parent->getTraitNames();
+            if (in_array(AccessorTrait::class, $traits)) {
+                $isTraitUsed = true;
+                break;
+            }
+            $parent = $parent->getParentClass();
+        }
+
+        if (!$isTraitUsed) {
+            return false;
+        }
+
         $attributes = $reflectionProperty->getAttributes();
 
         foreach ($attributes as $attribute) {
