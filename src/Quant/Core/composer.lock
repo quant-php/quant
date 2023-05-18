@@ -1298,12 +1298,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/quant-php/phpstan.git",
-                "reference": "99babc96ed86ad5c042cbc2a5b4229fc08e0fded"
+                "reference": "aac02c61990f8a6b6d4d252bbf3f7291c2cfe652"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/quant-php/phpstan/zipball/99babc96ed86ad5c042cbc2a5b4229fc08e0fded",
-                "reference": "99babc96ed86ad5c042cbc2a5b4229fc08e0fded",
+                "url": "https://api.github.com/repos/quant-php/phpstan/zipball/aac02c61990f8a6b6d4d252bbf3f7291c2cfe652",
+                "reference": "aac02c61990f8a6b6d4d252bbf3f7291c2cfe652",
                 "shasum": ""
             },
             "require": {
@@ -1355,7 +1355,7 @@
                 "issues": "https://github.com/quant-php/phpstan/issues",
                 "source": "https://github.com/quant-php/phpstan/tree/main"
             },
-            "time": "2023-05-18T16:52:05+00:00"
+            "time": "2023-05-18T21:47:22+00:00"
         },
         {
             "name": "sebastian/cli-parser",
