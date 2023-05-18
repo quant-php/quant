@@ -47,7 +47,7 @@ class QuantAccessorAttributeReadWriteExtension implements ReadWritePropertiesExt
     /**
      * @throws ReflectionException
      */
-    protected function isQuantAttributed(PropertyReflection $property, string $propertyName)
+    protected function isQuantAttributed(PropertyReflection $property, string $propertyName): bool
     {
         $reflectionClass = $property->getDeclaringClass()->getNativeReflection();
         $reflectionProperty = $reflectionClass->getProperty($propertyName);

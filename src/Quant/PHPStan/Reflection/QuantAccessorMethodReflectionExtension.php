@@ -13,9 +13,13 @@ declare(strict_types=1);
 
 namespace Quant\PHPStan\Reflection;
 
+use PHPStan\BetterReflection\Reflection\ReflectionNamedType;
+use ReflectionType;
+use PHPStan\BetterReflection\Reflection\ReflectionUnionType;
 use PHPStan\Reflection\ClassReflection;
 use PHPStan\Reflection\MethodReflection;
 use PHPStan\Reflection\MethodsClassReflectionExtension;
+use PHPStan\ShouldNotHappenException;
 use Quant\Core\Attribute\Getter;
 use Quant\Core\Attribute\Setter;
 use Quant\Core\Lang\Modifier;
@@ -29,8 +33,8 @@ use ReflectionException;
  *  - on class property level
  *  - on constructor parameter level (constructor property promotion)
  *
- * Owning classes must use a AccessorTrait, or inherit from a class that uses an AccessorTrait
- *
+ * Owning classes must use a AccessorTrait, or inherit from a class that uses an AccessorTrait, in order for
+ * getters/setters to be properly resolved-.
  *
  */
 class QuantAccessorMethodReflectionExtension implements MethodsClassReflectionExtension
@@ -43,12 +47,27 @@ class QuantAccessorMethodReflectionExtension implements MethodsClassReflectionEx
             return false;
         }
 
-        return !!$this->queryInheritance($classReflection, $methodName);
+        return !!$this->queryMethod($classReflection, $methodName);
     }
 
-    protected function queryInheritance(ClassReflection $declaringClass, string $methodName): false|array
+    /**
+     * @throws ShouldNotHappenException
+     */
+    public function getMethod(ClassReflection $classReflection, string $methodName): MethodReflection
     {
-        $methodReflection = false;
+        $methodReflection = $this->queryMethod($classReflection, $methodName);
+
+        if (!$methodReflection) {
+            throw new ShouldNotHappenException();
+        }
+
+        return $methodReflection;
+    }
+
+
+    protected function queryMethod(ClassReflection $declaringClass, string $methodName): ?MethodReflection
+    {
+        $methodReflection = null;
         while ($declaringClass) {
             if (($methodReflection = $this->resolveMethod($declaringClass, $methodName))) {
                 break;
@@ -56,26 +75,9 @@ class QuantAccessorMethodReflectionExtension implements MethodsClassReflectionEx
             $declaringClass = $declaringClass->getParentClass();
         }
 
-        if (
-            !$methodReflection ||
-            !$declaringClass
-        ) {
-            return false;
-        }
-
-        return [
-            "declaringClass" => $declaringClass,
-            "methodReflection" => $methodReflection
-        ];
+        return $methodReflection;
     }
 
-
-    public function getMethod(ClassReflection $classReflection, string $methodName): MethodReflection
-    {
-        $data = $this->queryInheritance($classReflection, $methodName);
-
-        return $data["methodReflection"];
-    }
 
     public function resolveMethod(ClassReflection $classReflection, string $methodName): ?MethodReflection
     {
@@ -85,82 +87,72 @@ class QuantAccessorMethodReflectionExtension implements MethodsClassReflectionEx
             return null;
         }
 
-        return new AccessorMethodReflection(
-            $classReflection,
-            $methodName,
-            $cfg["type"],
-            $cfg["modifier"],
-            $cfg["isSetter"]
-        );
+        return new AccessorMethodReflection($classReflection, $methodName, ...$cfg);
     }
+
 
     /**
      * @throws ReflectionException
+     *
+     * @return null|array{isSetter: bool, propertyType: ReflectionType|null, modifier: Modifier}
      */
-    protected function getPropertyConfig(ClassReflection $classReflection, string $methodName): array|false
+    protected function getPropertyConfig(ClassReflection $classReflection, string $methodName): ?array
     {
         $reflectionClass = new ReflectionClass($classReflection->getName());
 
-
         $propName = "";
         $prefix = "get";
+        $propName = lcfirst(substr($methodName, 3));
 
         switch (true) {
-            case (str_starts_with($methodName, "get")):
-                $prefix = "get";
-                $propName = lcfirst(substr($methodName, 3));
-                break;
             case (str_starts_with($methodName, "set")):
                 $prefix = "set";
-                $propName = lcfirst(substr($methodName, 3));
+                // no break intentional
+            case (str_starts_with($methodName, "get")):
                 break;
             case (str_starts_with($methodName, "is")):
                 $prefix = "is";
                 $propName = lcfirst(substr($methodName, 2));
                 break;
+            default:
+                $propName = null;
+                break;
         }
 
         if (!$propName) {
-            return false;
+            return null;
         }
 
         if ($reflectionClass->hasProperty($propName)) {
             $reflectionProperty = $reflectionClass->getProperty($propName);
 
-            if ($prefix === "is" && $reflectionProperty->getType()->getName() !== "bool") {
-                return false;
+            /* @phpstan-ignore-next-line */
+            if ($prefix === "is" && $reflectionProperty->getType()?->getName() !== "bool") {
+                return null;
             }
 
-            if ($prefix === "get" || $prefix === "is") {
-                $attributes = $reflectionProperty->getAttributes(Getter::class);
+            $attributes = $reflectionProperty->getAttributes($prefix === "set" ? Setter::class : Getter::class);
 
-                if (!empty($attributes)) {
-                    return [
-                        "isSetter" => false,
-                        "type"     => $reflectionProperty->getType(),
-                        "modifier" => $attributes[0]->getArguments() ? $attributes[0]->getArguments()[0] : Modifier::PUBLIC
-                    ];
-                }
+            if (empty($attributes)) {
+                return null;
             }
 
-            if ($prefix === "set") {
-                $attributes = $reflectionProperty->getAttributes(Setter::class);
+            $modArgs = $attributes[0]->getArguments();
+            $modifier = $modArgs ?
+                ($modArgs[0] instanceof Modifier ? $modArgs[0] : Modifier::PUBLIC) : Modifier::PUBLIC;
 
-                if (!empty($attributes)) {
-                    return [
-                        "isSetter" => true,
-                        "type"     => $reflectionProperty->getType(),
-                        "modifier" => $attributes[0]->getArguments() ? $attributes[0]->getArguments()[0] : Modifier::PUBLIC
-                    ];
-                }
-            }
+            return [
+                "isSetter"     => !($prefix === "get" || $prefix === "is"),
+                "propertyType" => $reflectionProperty->getType(),
+                "modifier"     => $modifier
+            ];
         }
 
-        return false;
+        return null;
     }
 
 
-    protected function doesClassUseAccessorTrait(ClassReflection $classReflection)
+    private function doesClassUseAccessorTrait(ClassReflection $classReflection): bool
     {
         $parent = $classReflection->getNativeReflection();
         $isTraitUsed = false;

@@ -29,8 +29,6 @@ use PHPStan\Type\Type;
  * ```
  *
  * The setter-method `setValue` will then accept a `string`-typed argument with the function-parameter `$value`.
- *
- *
  */
 class ValueParameter implements ParameterReflection
 {

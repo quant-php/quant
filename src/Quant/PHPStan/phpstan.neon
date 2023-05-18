@@ -3,7 +3,8 @@ parameters:
 	excludePaths:
 	    - vendor
 	    - /*/Benchmarks/*
+	    - /*/Tests/Data/*
 	paths:
 	    - .
 includes:
-    extension.neon
+    - extension.neon

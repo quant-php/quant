@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace Quant\PHPStan\Reflection;
 
 use PHPStan\Type\IntegerType;
+use PHPStan\Type\MixedType;
 use ReflectionType;
 use PHPStan\Reflection\ClassMemberReflection;
 use PHPStan\Reflection\ClassReflection;
@@ -32,11 +33,17 @@ class AccessorMethodReflection implements MethodReflection
     public function __construct(
         private ClassReflection $declaringClass,
         private string $name,
-        private ReflectionType $propertyType,
-        private Modifier $modifier,
-        private bool $isSetter
+        private readonly ?ReflectionType $propertyType,
+        private readonly Modifier $modifier,
+        private readonly bool $isSetter
     ) {
     }
+
+    public function getPropertyType(): ?ReflectionType
+    {
+        return $this->propertyType;
+    }
+
 
     public function getDeclaringClass(): ClassReflection
     {
@@ -80,7 +87,8 @@ class AccessorMethodReflection implements MethodReflection
      */
     public function getVariants(): array
     {
-        $writeableType = TypehintHelper::decideTypeFromReflection($this->propertyType);
+        $writeableType = $this->propertyType ?
+            TypehintHelper::decideTypeFromReflection($this->propertyType) : new MixedType();
         $returnType = $this->isSetter ? new ObjectType($this->declaringClass->getName()) : $writeableType;
 
         $arguments = [];

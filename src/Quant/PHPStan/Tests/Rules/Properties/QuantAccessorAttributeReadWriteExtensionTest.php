@@ -14,12 +14,14 @@ declare(strict_types=1);
 namespace Quant\PHPStan\Tests\Rules\Properties;
 
 use PHPStan\Rules\DeadCode\UnusedPrivatePropertyRule;
-use PHPStan\Rules\Properties\DirectReadWritePropertiesExtensionProvider;
 use PHPStan\Rules\Properties\ReadWritePropertiesExtension;
 use PHPStan\Rules\Rule;
 use PHPStan\Testing\RuleTestCase;
 use Quant\PHPStan\Rules\Properties\QuantAccessorAttributeReadWriteExtension;
 
+/**
+ * @extends RuleTestCase<UnusedPrivatePropertyRule>
+ */
 class QuantAccessorAttributeReadWriteExtensionTest extends RuleTestCase
 {
     public function testQuantAccessorAttributeReadWriteExtension(): void
@@ -47,15 +49,15 @@ class QuantAccessorAttributeReadWriteExtensionTest extends RuleTestCase
         ]);
     }
 
+    public static function getAdditionalConfigFiles(): array
+    {
+        return [
+            __DIR__ . '/../../../extension.neon'
+        ];
+    }
+
     protected function getRule(): Rule
     {
-        return new UnusedPrivatePropertyRule(
-            new DirectReadWritePropertiesExtensionProvider([
-                new QuantAccessorAttributeReadWriteExtension()
-            ]),
-            [],
-            [],
-            true,
-        );
+        return self::getContainer()->getByType(UnusedPrivatePropertyRule::class);
     }
 }
