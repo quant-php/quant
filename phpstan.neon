@@ -3,6 +3,7 @@ parameters:
 	excludePaths:
 	    - /*/vendor/*
 	    - /*/Benchmarks/*
+	    - /*/PHPStan/Tests/Data/*
 	paths:
 	    - src
 
