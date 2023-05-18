@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Quant\PHPStan\Rules\Properties;
 
+use PHPStan\BetterReflection\Reflection\Adapter\FakeReflectionAttribute;
+use PHPStan\BetterReflection\Reflection\Adapter\ReflectionAttribute;
 use PHPStan\Reflection\PropertyReflection;
 use PHPStan\Rules\Properties\ReadWritePropertiesExtension;
 use Quant\Core\Attribute\Getter;
@@ -67,8 +69,22 @@ class QuantAccessorAttributeReadWriteExtension implements ReadWritePropertiesExt
             return false;
         }
 
-        $attributes = $reflectionProperty->getAttributes();
+        if ($this->hasQuantAttributes($reflectionClass->getAttributes())) {
+            return true;
+        }
 
+        $attributes = $reflectionProperty->getAttributes();
+        return $this->hasQuantAttributes($attributes);
+    }
+
+
+    /**
+     * @param array<int, FakeReflectionAttribute|ReflectionAttribute> $attributes
+     *
+     * @return bool
+     */
+    protected function hasQuantAttributes(array $attributes): bool
+    {
         foreach ($attributes as $attribute) {
             if (in_array($attribute->getName(), [Setter::class, Getter::class])) {
                 return true;
