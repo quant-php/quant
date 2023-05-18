@@ -36,7 +36,7 @@ class AccessorMethodReflectionTest extends PHPStanTestCase
      */
     public function testAccessorMethodReflection(): void
     {
-        include_once(__DIR__ . "/../../data/ParentA.php");
+        include_once(__DIR__ . "/../Data/ParentA.php");
 
         $tests = [
             [
