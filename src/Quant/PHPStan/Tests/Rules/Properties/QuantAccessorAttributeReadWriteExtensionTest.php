@@ -48,15 +48,15 @@ class QuantAccessorAttributeReadWriteExtensionTest extends RuleTestCase
             ]
         ]);
 
-        $this->analyse([__DIR__ . "/../../Data/D.php"], [
+        $this->analyse([__DIR__ . "/../../Data/ChildD.php"], [
             [
                 "Property Quant\PHPStan\Tests\Data\ChildD::\$foo is unused.",
-                35,
+                18,
                 $tip
             ],
             [
                 "Property Quant\PHPStan\Tests\Data\ChildD::\$bar is unused.",
-                37,
+                20,
                 $tip
             ]
         ]);
