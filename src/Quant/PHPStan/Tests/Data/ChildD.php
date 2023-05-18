@@ -13,18 +13,17 @@ declare(strict_types=1);
 
 namespace Quant\PHPStan\Tests\Data;
 
-use Quant\Core\Attribute\Getter;
-use Quant\Core\Attribute\Setter;
-use Quant\Core\Lang\Modifier;
-use Quant\Core\Trait\AccessorTrait;
-
-#[Getter(Modifier::PROTECTED)]
-#[Setter]
-class D
+class ChildD extends D
 {
-    use AccessorTrait;
-
     private string $foo;
 
     private string $bar;
+
+    public function run()
+    {
+        $d = new D();
+        $d->getFoo();
+
+        $d->setBar("value")->getFoo();
+    }
 }

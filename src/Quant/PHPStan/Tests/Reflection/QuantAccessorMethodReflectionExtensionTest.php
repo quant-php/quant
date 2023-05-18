@@ -50,5 +50,8 @@ class QuantAccessorMethodReflectionExtensionTest extends RuleTestCase
 
         $this->analyse([__DIR__ . "../../Data/D.php"], [
         ]);
+
+        $this->analyse([__DIR__ . "../../Data/ChildD.php"], [
+        ]);
     }
 }
