@@ -35,4 +35,12 @@ class ChildD extends D
     private string $foo;
 
     private string $bar;
+
+    public function run()
+    {
+        $d = new D();
+        $d->getFoo();
+
+        $d->setBar("value")->getFoo();
+    }
 }

@@ -47,5 +47,8 @@ class QuantAccessorMethodReflectionExtensionTest extends RuleTestCase
             ["Call to an undefined method Quant\PHPStan\Tests\Data\B::notExisting().", 65],
             ["Call to an undefined method Quant\PHPStan\Tests\Data\A::notExisting().", 69]
         ]);
+
+        $this->analyse([__DIR__ . "../../Data/D.php"], [
+        ]);
     }
 }
