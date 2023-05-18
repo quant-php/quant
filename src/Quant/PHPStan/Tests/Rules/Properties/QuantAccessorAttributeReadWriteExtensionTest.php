@@ -35,7 +35,7 @@ class QuantAccessorAttributeReadWriteExtensionTest extends RuleTestCase
     {
         $tip = 'See: https://phpstan.org/developing-extensions/always-read-written-properties';
 
-        $this->analyse([__DIR__ . "../../../Data/A.php"], [
+        $this->analyse([__DIR__ . "/../../../Data/A.php"], [
             [
                 "Property Quant\PHPStan\Tests\Data\A::\$neverRead is never read, only written.",
                 37,
