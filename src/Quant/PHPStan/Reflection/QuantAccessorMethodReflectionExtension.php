@@ -100,9 +100,8 @@ class QuantAccessorMethodReflectionExtension implements MethodsClassReflectionEx
     {
         $reflectionClass = new ReflectionClass($classReflection->getName());
 
-        $propName = "";
-        $prefix = "get";
         $propName = lcfirst(substr($methodName, 3));
+        $prefix = "get";
 
         switch (true) {
             case (str_starts_with($methodName, "set")):
@@ -123,6 +122,8 @@ class QuantAccessorMethodReflectionExtension implements MethodsClassReflectionEx
             return null;
         }
 
+        $classAttributes = $reflectionClass->getAttributes($prefix === "set" ? Setter::class : Getter::class);
+
         if ($reflectionClass->hasProperty($propName)) {
             $reflectionProperty = $reflectionClass->getProperty($propName);
 
@@ -131,7 +132,11 @@ class QuantAccessorMethodReflectionExtension implements MethodsClassReflectionEx
                 return null;
             }
 
-            $attributes = $reflectionProperty->getAttributes($prefix === "set" ? Setter::class : Getter::class);
+            if (empty($classAttributes)) {
+                $attributes = $reflectionProperty->getAttributes($prefix === "set" ? Setter::class : Getter::class);
+            } else {
+                $attributes = $classAttributes;
+            }
 
             if (empty($attributes)) {
                 return null;
