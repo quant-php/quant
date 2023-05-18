@@ -20,18 +20,6 @@ use Quant\Core\Lang\Modifier;
 use ValueError;
 
 /**
- * @method A setPrivateVar(int $b)
- * @method int getPrivateVar()
- * @method A setFoo(string $a)
- * @method A setFoobar(string $b)
- * @method string getFoo()
- * @method string getProtectedVar()
- * @method A setProtectedVar(string $a)
- * @method A setValueErrorTrigger(int $a).
- * @method bool isBool()
- * @method string getNotBool()
- * @method A setProtectedGuard(string $s)
- * @method string getProtectedGuard()
  */
 class A
 {

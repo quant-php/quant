@@ -11,21 +11,22 @@
 
 declare(strict_types=1);
 
-namespace Quant\PHPStan\Tests\Rules;
+namespace Quant\PHPStan\Tests\Reflection;
 
+use PHPStan\Rules\Methods\CallMethodsRule;
 use PHPStan\Rules\Rule;
-use PHPStan\Rules\RuleLevelHelper;
 use PHPStan\Testing\RuleTestCase;
-use Quant\PHPStan\Rules\QuantAccessorRule;
 
-class QuantAccessorRuleTest extends RuleTestCase
+/**
+ * @extends RuleTestCase<CallMethodsRule>
+ */
+class QuantAccessorMethodReflectionExtensionTest extends RuleTestCase
 {
     protected function getRule(): Rule
     {
-        return new QuantAccessorRule(
-            self::getContainer()->getByType(RuleLevelHelper::class)
-        );
+        return self::getContainer()->getByType(CallMethodsRule::class);
     }
+
 
     public static function getAdditionalConfigFiles(): array
     {
@@ -35,13 +36,16 @@ class QuantAccessorRuleTest extends RuleTestCase
         );
     }
 
+
     public function testRule(): void
     {
         $this->analyse([__DIR__ . "../../Data/B.php"], [
             ["Call to private method setPrivateBar() of class Quant\PHPStan\Tests\Data\A.", 32],
             ["Call to private method getPrivateBar() of class Quant\PHPStan\Tests\Data\A.", 37],
-            ["Call to protected method getProtectedBarC() of class Quant\PHPStan\Tests\Data\C.", 55],
-            ["Call to an undefined method Quant\PHPStan\Tests\Data\B::notExisting().", 63],
+            ["Cannot call method getProtectedBar() on string.", 54],
+            ["Call to protected method getProtectedBarC() of class Quant\PHPStan\Tests\Data\C.", 57],
+            ["Call to an undefined method Quant\PHPStan\Tests\Data\B::notExisting().", 65],
+            ["Call to an undefined method Quant\PHPStan\Tests\Data\A::notExisting().", 69]
         ]);
     }
 }

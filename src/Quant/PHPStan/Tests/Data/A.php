@@ -31,13 +31,20 @@ class A extends ParentA
     #[Getter(Modifier::PROTECTED)] #[Setter(Modifier::PROTECTED)]
     private string $protectedBar;
 
-
     #[Getter]
     private string $snafu = "snafu";
 
     private string $neverRead = "foo";
 
     private string $unused;
+
+    public function __construct(
+        #[Getter]
+        private string $constructorProperty = "1",
+        #[Setter]
+        private string $propertySet = "1"
+    ) {
+    }
 
     private function proxyGetFoo(): A
     {

@@ -22,4 +22,16 @@ class C extends B
     {
         return "protected guard";
     }
+
+    protected function proxyApplyPublicGuard(): string
+    {
+        $b = new B("");
+        return $b->applyPublicGuard("");
+    }
+
+    public function proxyAProtectedVar(): A
+    {
+        $b = new B("");
+        return $b->setProtectedVar($b->applyProtectedGuard("k"));
+    }
 }

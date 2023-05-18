@@ -13,8 +13,10 @@ declare(strict_types=1);
 
 namespace Quant\PHPStan\Tests\Reflection;
 
+use PHPStan\Process\ProcessCrashedException;
 use PHPStan\Type\ObjectType;
 use PHPStan\Type\TypehintHelper;
+use Quant\PHPStan\Tests\Data\ParentA;
 use ReflectionType;
 use PHPStan\Reflection\ClassReflection;
 use PHPStan\Reflection\MissingPropertyFromReflectionException;
@@ -40,11 +42,31 @@ class AccessorMethodReflectionTest extends PHPStanTestCase
             [
                 "modifier" => Modifier::PUBLIC,
                 "isSetter" => true
+            ],
+            [
+                "modifier" => Modifier::PRIVATE,
+                "isSetter" => true
+            ],
+            [
+                "modifier" => Modifier::PROTECTED,
+                "isSetter" => true
+            ],
+            [
+                "modifier" => Modifier::PUBLIC,
+                "isSetter" => false
+            ],
+            [
+                "modifier" => Modifier::PRIVATE,
+                "isSetter" => false
+            ],
+            [
+                "modifier" => Modifier::PROTECTED,
+                "isSetter" => false
             ]
         ];
 
         foreach ($tests as $props) {
-            $clsName = \Quant\PHPStan\Tests\Data\ParentA::class;
+            $clsName = ParentA::class;
             $declaringClass = $this->getClassReflectionFor($clsName);
             $propertyType   = (new ReflectionClass($clsName))->getProperty("foo")->getType();
 
@@ -88,18 +110,27 @@ class AccessorMethodReflectionTest extends PHPStanTestCase
                 $this->assertTrue($variant->getReturnType()->equals(new ObjectType($declaringClass->getName())));
             } else {
                 $this->assertSame(0, count($variant->getParameters()));
-                $this->assertTrue($variant->getReturnType()->equals->equals($valueParameter->getType()));
+                $this->assertTrue($variant->getReturnType()->equals(
+                    TypehintHelper::decideTypeFromReflection($refl->getPropertyType())
+                ));
             }
         }
     }
 
 
+    /**
+     * @throws ShouldNotHappenException
+     */
     protected function getReflectionFor(
         ClassReflection $declaringClass,
-        ReflectionType $propertyType,
+        ?ReflectionType $propertyType,
         Modifier $modifier,
         bool $isSetter
-    ) {
+    ): AccessorMethodReflection {
+
+        if (!$propertyType) {
+            throw new ShouldNotHappenException();
+        }
 
         return new AccessorMethodReflection(
             $declaringClass,
@@ -111,7 +142,7 @@ class AccessorMethodReflectionTest extends PHPStanTestCase
     }
 
 
-    protected function getClassReflectionFor(string $className)
+    protected function getClassReflectionFor(string $className): ClassReflection
     {
         return $this->createReflectionProvider()->getClass($className);
     }

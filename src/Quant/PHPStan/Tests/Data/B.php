@@ -49,7 +49,9 @@ class B extends A
 
     public function run()
     {
-        $a = new A();
+        $a = new B();
+        $c = $a->setProtectedBar("ee")->setProtectedBar("ee")->setProtectedBar("ee")->getProtectedBar();
+        $c->getProtectedBar();
 
         $c = new C();
         $c->getProtectedBarC();
@@ -61,5 +63,9 @@ class B extends A
         $a->getProtectedBar();
 
         $this->notExisting();
+
+
+        $this->getConstructorProperty();
+        $a->setPropertySet("1")->notExisting();
     }
 }

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "733fec82a048199c282c883de0d0932a",
+    "content-hash": "5c74112dec7929757c8df38f851c3c66",
     "packages": [],
     "packages-dev": [
         {
@@ -250,12 +250,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpstan/phpstan.git",
-                "reference": "23c8772ca2e46525b3709ced0cccb60b4609c2d0"
+                "reference": "ec9bf5a7318a5d9023f44b61bfc0271fe0467ca2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/23c8772ca2e46525b3709ced0cccb60b4609c2d0",
-                "reference": "23c8772ca2e46525b3709ced0cccb60b4609c2d0",
+                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/ec9bf5a7318a5d9023f44b61bfc0271fe0467ca2",
+                "reference": "ec9bf5a7318a5d9023f44b61bfc0271fe0467ca2",
                 "shasum": ""
             },
             "require": {
@@ -305,7 +305,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2023-05-15T09:53:23+00:00"
+            "time": "2023-05-17T14:16:06+00:00"
         },
         {
             "name": "phpunit/php-code-coverage",
@@ -743,18 +743,21 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/quant-php/core.git",
-                "reference": "6cd2b2e886b3075d974729dc1b3c0a23223c2cfe"
+                "reference": "a35eed63b8d723b7406309ea89583ac0101c7350"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/quant-php/core/zipball/6cd2b2e886b3075d974729dc1b3c0a23223c2cfe",
-                "reference": "6cd2b2e886b3075d974729dc1b3c0a23223c2cfe",
+                "url": "https://api.github.com/repos/quant-php/core/zipball/a35eed63b8d723b7406309ea89583ac0101c7350",
+                "reference": "a35eed63b8d723b7406309ea89583ac0101c7350",
                 "shasum": ""
             },
             "require": {
+                "composer-runtime-api": ">=2.1",
                 "php": "^8.2"
             },
             "require-dev": {
+                "doctrine/annotations": "2.0.x-dev",
+                "phpbench/phpbench": "^1.2@dev",
                 "phpstan/phpstan": "^1.10",
                 "phpunit/phpunit": "^10.1",
                 "squizlabs/php_codesniffer": "^3.7"
@@ -764,7 +767,10 @@
             "autoload": {
                 "psr-4": {
                     "Quant\\Core\\": ""
-                }
+                },
+                "exclude-from-classmap": [
+                    "/Tests/"
+                ]
             },
             "notification-url": "https://packagist.org/downloads/",
             "license": [
@@ -777,8 +783,8 @@
                     "homepage": "https://thorsten.suckow-homberg.de"
                 }
             ],
-            "description": "PHP library",
-            "homepage": "https://quant-php.dev",
+            "description": "Low-level API providing contracts and base implementations for PHP projects.",
+            "homepage": "https://quant-php.dev/docs/packages/quant/core",
             "keywords": [
                 "framework"
             ],
@@ -786,7 +792,7 @@
                 "issues": "https://github.com/quant-php/core/issues",
                 "source": "https://github.com/quant-php/core/tree/main"
             },
-            "time": "2023-05-10T17:36:36+00:00"
+            "time": "2023-05-17T13:20:26+00:00"
         },
         {
             "name": "sebastian/cli-parser",
@@ -1732,12 +1738,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/squizlabs/PHP_CodeSniffer.git",
-                "reference": "a26c071d00b415bba26cedd8f835fca6288cf6b9"
+                "reference": "2dc7b5981488502fed92df99c1460530d741e666"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/squizlabs/PHP_CodeSniffer/zipball/a26c071d00b415bba26cedd8f835fca6288cf6b9",
-                "reference": "a26c071d00b415bba26cedd8f835fca6288cf6b9",
+                "url": "https://api.github.com/repos/squizlabs/PHP_CodeSniffer/zipball/2dc7b5981488502fed92df99c1460530d741e666",
+                "reference": "2dc7b5981488502fed92df99c1460530d741e666",
                 "shasum": ""
             },
             "require": {
@@ -1782,7 +1788,7 @@
                 "source": "https://github.com/squizlabs/PHP_CodeSniffer",
                 "wiki": "https://github.com/squizlabs/PHP_CodeSniffer/wiki"
             },
-            "time": "2023-05-07T04:45:11+00:00"
+            "time": "2023-05-18T08:37:09+00:00"
         },
         {
             "name": "theseer/tokenizer",

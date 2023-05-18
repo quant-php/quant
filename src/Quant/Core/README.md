@@ -18,7 +18,7 @@ $ composer require quant/core
 
 ## Resources
 
-* [Documentation](https://www.quant-php.dev/docs/api/packages/quant/core)
+* [Documentation](https://www.quant-php.dev/docs/packages/quant/core)
 * [Report issues](https://github.com/quant-php/quant/issues) and
   [send Pull Requests](https://github.com/quant-php/quant/pulls)
   in the [main quant repository](https://github.com/quant-php/quant)

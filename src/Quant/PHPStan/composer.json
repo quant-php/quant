@@ -28,5 +28,12 @@
             "/Tests/"
         ]
     },
+    "extra": {
+        "phpstan": {
+            "includes": [
+                "extension.neon"
+            ]
+        }
+    },
     "minimum-stability": "dev"
 }

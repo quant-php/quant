@@ -94,6 +94,8 @@ class AccessorTraitTest extends TestCase
         $this->expectException(BadMethodCallException::class);
 
         $inst = $this->createA();
+
+        /* @phpstan-ignore-next-line */
         $inst->getProtectedVar();
     }
 
@@ -101,6 +103,8 @@ class AccessorTraitTest extends TestCase
     {
         $this->expectException(BadMethodCallException::class);
         $inst = $this->createA();
+
+        /* @phpstan-ignore-next-line */
         $inst->setProtectedVar("foo");
     }
 
@@ -134,22 +138,24 @@ class AccessorTraitTest extends TestCase
             "foo" => "Hello World"
         ];
 
-        $inst = $this->createC($args_1);
+        $c = $this->createC($args_1);
 
-        $inst->setPrivateVar(123);
-        $this->assertSame(123, $inst->getPrivateVar());
+        $c->setPrivateVar(123);
+        $this->assertSame(123, $c->getPrivateVar());
 
-        $this->assertNotSame("updated", $inst->proxyProtectedVar());
-        $inst->setProxyProtectedVar("updated");
-        $this->assertSame("updated", $inst->proxyProtectedVar());
+        $this->assertNotSame("updated", $c->proxyProtectedVar());
+        $c->setProxyProtectedVar("updated");
+        $this->assertSame("updated", $c->proxyProtectedVar());
 
-        $this->assertNotSame("new value", $inst->getGuarded());
-        $inst->setGuarded("new value");
-        $this->assertSame("new value", $inst->getGuarded());
+        $this->assertNotSame("new value", $c->getGuarded());
+        $c->setGuarded("new value");
+        $this->assertSame("new value", $c->getGuarded());
 
-        $this->assertNotSame("new value", $inst->getProtectedGuard());
-        $inst->setProtectedGuard("will be ignored");
-        $this->assertSame("protected guard", $inst->getProtectedGuard());
+        $this->assertNotSame("new value", $c->getProtectedGuard());
+        $c->setProtectedGuard("will be ignored");
+        $this->assertSame("protected guard", $c->getProtectedGuard());
+
+        $this->assertInstanceOf(A::class, $c->proxyAProtectedVar());
     }
 
 
