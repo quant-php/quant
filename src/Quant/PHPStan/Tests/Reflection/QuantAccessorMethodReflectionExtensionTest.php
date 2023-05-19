@@ -52,6 +52,7 @@ class QuantAccessorMethodReflectionExtensionTest extends RuleTestCase
         ]);
 
         $this->analyse([__DIR__ . "../../Data/ChildD.php"], [
+            ["Call to private method setBar() of class Quant\PHPStan\Tests\Data\D.", 27]
         ]);
     }
 }

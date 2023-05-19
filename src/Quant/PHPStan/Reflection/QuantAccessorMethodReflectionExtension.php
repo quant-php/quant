@@ -132,9 +132,9 @@ class QuantAccessorMethodReflectionExtension implements MethodsClassReflectionEx
                 return null;
             }
 
-            if (empty($classAttributes)) {
-                $attributes = $reflectionProperty->getAttributes($prefix === "set" ? Setter::class : Getter::class);
-            } else {
+            $attributes = $reflectionProperty->getAttributes($prefix === "set" ? Setter::class : Getter::class);
+
+            if (empty($attributes)) {
                 $attributes = $classAttributes;
             }
 

@@ -26,5 +26,6 @@ class D
 
     private string $foo;
 
+    #[Setter(Modifier::PRIVATE)]
     private string $bar;
 }
