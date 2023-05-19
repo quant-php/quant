@@ -245,10 +245,9 @@ trait AccessorTrait
                 continue;
             }
 
-            $accessorAttribute = $classAccessorAttribute;
-
+            $accessorAttribute = $property->getAttributes($accessorClass);
             if (empty($accessorAttribute)) {
-                $accessorAttribute = $property->getAttributes($accessorClass);
+                $accessorAttribute = $classAccessorAttribute;
             }
 
             if (!empty($accessorAttribute) && ($property instanceof ReflectionProperty)) {

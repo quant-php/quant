@@ -27,7 +27,7 @@ class ClassHasAttributes
     #[Setter]
     public string $foobar = "Ok";
 
-    #[Getter]
+    #[Getter(Modifier::PRIVATE)]
     private string $snafu;
 
     public function __construct(

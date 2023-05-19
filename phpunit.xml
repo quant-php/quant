@@ -13,6 +13,9 @@
     <testsuite name="Quant Test Suite">
       <directory>./src/Quant/Core/Tests/</directory>
     </testsuite>
+    <testsuite name="PHPStan Test Suite">
+      <directory>./src/Quant/PHPStan/Tests/</directory>
+    </testsuite>
   </testsuites>
 
   <php>
