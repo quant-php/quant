@@ -74,8 +74,21 @@ class AccessorTraitTest extends TestCase
 
         $this->assertSame("foo", $inst->getFoo());
         $this->assertSame("bar", $inst->getBar());
-        $this->assertSame("snafu", $inst->getSnafu());
         $this->assertSame("foobar", $inst->getFoobar());
+    }
+
+
+    public function testGetSnafuModifierOverridden(): void
+    {
+        $inst = $this->createClassWithSetterAndGetterAttributes([
+            "foo" => "Hello World",
+            "bar" => "World Hello"
+        ]);
+
+        $this->expectException(BadMethodCallException::class);
+
+        /* @phpstan-ignore-next-line */
+        $inst->getSnafu();
     }
 
 
