@@ -340,6 +340,24 @@ class AbstractListTest extends TestCase
 
         $cmpB2->a = 0;
         $this->assertFalse($listCmpA->equals($listCmpB));
+
+        // plain
+        $abstractListA = $this->getAbstractListClass();
+        $abstractListB = $this->getAbstractListClass();
+
+        $this->assertTrue($abstractListA->equals($abstractListB));
+
+        $itemA = new stdClass();
+        $itemB = new stdClass();
+
+        $abstractListA[] = $itemA;
+        $this->assertFalse($abstractListA->equals($abstractListB));
+
+        $abstractListB[] = $itemA;
+        $this->assertTrue($abstractListA->equals($abstractListB));
+
+        $abstractListB[] = $itemB;
+        $this->assertFalse($abstractListA->equals($abstractListB));
     }
 
 
