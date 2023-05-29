@@ -103,22 +103,24 @@ abstract class AbstractList implements Arrayable, ArrayAccess, Iterator, Countab
 
 
     /**
-     * Returns the entry in this list given the callback function.
+     * Returns a new AbstractList containing all the entries for which the callable returned `true`.
+     * Returns null if no matches were found.
      *
      * @param callable $findFn A callback. Return true in the function to indicate a match. First match will
      * be returned. The callback is passed the current entry.
      *
-     * @return ?TValue
+     * @return null|static
      */
-    public function findBy(callable $findFn): mixed
+    public function findBy(callable $findFn): null|static
     {
+        $matches = [];
         foreach ($this->data as $resource) {
             if ($findFn($resource) === true) {
-                return $resource;
+                $matches[] = $resource;
             }
         }
 
-        return null;
+        return count($matches) === 0 ? null : static::make(...$matches);
     }
 
 
@@ -194,7 +196,7 @@ abstract class AbstractList implements Arrayable, ArrayAccess, Iterator, Countab
      *
      * @throws OutOfBoundsException
      */
-    protected function doInsert(mixed $offset, mixed $value)
+    private function doInsert(mixed $offset, mixed $value)
     {
         if (!is_null($offset) && !is_int($offset)) {
             throw new OutOfBoundsException(
@@ -216,7 +218,7 @@ abstract class AbstractList implements Arrayable, ArrayAccess, Iterator, Countab
      *
      * @throws TypeError
      */
-    protected function assertTypeFor(mixed $value): bool
+    private function assertTypeFor(mixed $value): bool
     {
         $entityType = $this->getType();
 

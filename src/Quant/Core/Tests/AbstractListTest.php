@@ -20,6 +20,8 @@ use Iterator;
 use OutOfBoundsException;
 use Quant\Core\Contract\Comparable;
 use Quant\Core\Contract\Equatable;
+use Quant\Core\Tests\Resources\Entity;
+use Quant\Core\Tests\Resources\EntityList;
 use stdClass;
 use PHPUnit\Framework\TestCase;
 use TypeError;
@@ -211,9 +213,11 @@ class AbstractListTest extends TestCase
 
         /** @phpstan-ignore-next-line */
         $cb = $mock->findCallback(...);
+
         $this->assertSame(
             $cmpList[1],
-            $abstractList->findBy($cb)
+            /** @phpstan-ignore-next-line */
+            $abstractList->findBy($cb)[0]
         );
     }
 
@@ -360,6 +364,36 @@ class AbstractListTest extends TestCase
         $this->assertFalse($abstractListA->equals($abstractListB));
     }
 
+
+    public function testDocs(): void
+    {
+
+        $listA = new EntityList();
+        $listA[] = new Entity("1");
+        $listA[] = new Entity("1");
+
+        $listB = new EntityList();
+        $listB[] = new Entity("1");
+        $listB[] = new Entity("2");
+
+        $this->assertFalse($listA->equals($listB));
+
+        $listC = EntityList::make(new Entity("3"), new Entity("4"));
+
+        $this->assertTrue($listC->map(fn(Entity $item): Entity => $item->setValue("1"))->equals($listA));
+
+        /**
+         * @var Entity $head
+         */
+        $head = $listB->peek();
+        $this->assertSame("2", $head->getValue());
+
+        $this->assertNull($listC->findBy(fn (Entity $item): bool => $item->getValue() === "a"));
+        $this->assertEquals(
+            $listC->findBy(fn (Entity $item): bool => $item->getValue() !== "a")?->toArray(),
+            [$listC[0], $listC[1]]
+        );
+    }
 
 
 // ---------------------
