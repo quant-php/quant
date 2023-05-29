@@ -23,12 +23,6 @@ use Quant\Core\Contract\Equatable;
 use TypeError;
 
 /**
- * List supporting Generic types.
- * Each class deriving from AbstractList must provide information about the type maintained
- * with instances of this list via `getType`.
- * In addition to the interfaces implemented by this class, additional methods are provided
- * that help with filtering or looking up entries: #findBy, #peek#, #map
- *
  * @template TValue
  * @implements Iterator<int, TValue>
  * @implements  ArrayAccess<int, TValue>
@@ -47,20 +41,12 @@ abstract class AbstractList implements Arrayable, ArrayAccess, Iterator, Countab
     protected int $position = 0;
 
 
-    /**
-     * Constructor.
-     * Final to allow new static();
-     *
-     * @see make
-     */
     final public function __construct()
     {
     }
 
 
     /**
-     * Factory method for easily creating instances of the implementing class.
-     *
      * @param mixed ...$items
      *
      * @return static
@@ -77,20 +63,11 @@ abstract class AbstractList implements Arrayable, ArrayAccess, Iterator, Countab
     }
 
 
-    /**
-     * Returns the class name of the entity-type this list should maintain
-     * entries of.
-     *
-     * @return string
-     */
     abstract public function getType(): string;
 
 
     /**
-     * Applies the map function to this data and returns **this** list.
-     *
-     * @param callable $mapFn The callable to pass to the callback submitted to
-     * array_map()
+     * @param callable $mapFn
      *
      * @return static
      */
@@ -103,11 +80,7 @@ abstract class AbstractList implements Arrayable, ArrayAccess, Iterator, Countab
 
 
     /**
-     * Returns a new AbstractList containing all the entries for which the callable returned `true`.
-     * Returns null if no matches were found.
-     *
-     * @param callable $findFn A callback. Return true in the function to indicate a match. First match will
-     * be returned. The callback is passed the current entry.
+     * @param callable $findFn
      *
      * @return null|static
      */
@@ -125,8 +98,6 @@ abstract class AbstractList implements Arrayable, ArrayAccess, Iterator, Countab
 
 
     /**
-     * Returns the element at the head of the AbstractList, or null if the list is empty.
-     *
      * @return ?TValue
      */
     public function peek(): mixed
@@ -176,17 +147,9 @@ abstract class AbstractList implements Arrayable, ArrayAccess, Iterator, Countab
     }
 
 
-    /**
-     * Method called by the abstract list if containing items are neither Equatable nor Comparable.
-     * Override to implement comparator.
-     *
-     * @param mixed $a
-     * @param mixed $b
-     * @return bool
-     */
-    protected function compareItems(mixed $a, mixed $b): bool
+    protected function compareItems(mixed $lft, mixed $rgt): bool
     {
-        return $a === $b;
+        return $lft === $rgt;
     }
 
     /**
@@ -213,9 +176,6 @@ abstract class AbstractList implements Arrayable, ArrayAccess, Iterator, Countab
     }
 
     /**
-     * @param mixed  $value
-     * @return bool
-     *
      * @throws TypeError
      */
     private function assertTypeFor(mixed $value): bool
