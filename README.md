@@ -7,7 +7,7 @@ source projects, where functionality has proven useful to justify a refactoring 
 ## Installation
 
 ```bash
-$ composer require quant-php/quant
+$ composer require quant/quant
 ```
 
 ## Documentation
